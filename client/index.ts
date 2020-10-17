@@ -37,10 +37,9 @@ interface StartEvent {
 
 async function process(message: MessageEvent) {
   const event: DispatchEvent | StartEvent = JSON.parse(message.data);
-  console.log(event.type);
   switch (event.type) {
     case "dispatch":
-      actions.dispatch(event.data as ChangeSet);
+      actions.dispatch(ChangeSet.fromJSON(event.data as any));
       break;
     case "start":
       actions.start(event.data as string);
@@ -50,14 +49,12 @@ async function process(message: MessageEvent) {
 
 function syncDispatch() {
   return (transaction: Transaction) => {
-    console.log(transaction);
     view.update([transaction]);
     if (!transaction.changes.empty && !transaction.annotation(syncAnnotation)) {
-      // TODO: changeset malformed by stringify
       ws.send(
         JSON.stringify({
           type: "dispatch",
-          data: transaction.changes,
+          data: transaction.changes.toJSON(),
         })
       );
     }
