@@ -4,13 +4,7 @@ const wss = new WebSocket.Server({
   port: process.env.SNOWPACK_PUBLIC_WSS_PORT,
 });
 
-const doc = `<!doctype html>
-<html>
-  <body>
-    <h1>Hello world</h1>
-    <h2>Hello world</h2>
-  </body>
-</html>`;
+let doc = ``;
 
 wss.on("connection", (ws) => {
   ws.send(
@@ -20,10 +14,21 @@ wss.on("connection", (ws) => {
     })
   );
   ws.on("message", (message) => {
-    wss.clients.forEach((client) => {
-      if (client !== ws && client.readyState === WebSocket.OPEN) {
-        client.send(message);
-      }
-    });
+    const { type, data } = JSON.parse(message);
+
+    switch (type) {
+      case "dispatch":
+        // relay message to all other clients
+        wss.clients.forEach((client) => {
+          if (client !== ws && client.readyState === WebSocket.OPEN) {
+            client.send(message);
+          }
+        });
+        break;
+      case "doc":
+        // sync doc for new connecting clients
+        doc = data.join("\n");
+        break;
+    }
   });
 });

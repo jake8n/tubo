@@ -6,7 +6,8 @@
     "dev": "snowpack dev"
   },
   "dependencies": {
-    "@codemirror/next": "^0.13.1"
+    "@codemirror/next": "^0.13.1",
+    "realms-shim": "^1.2.2"
   },
   "devDependencies": {
     "snowpack": "^2.14.3"
