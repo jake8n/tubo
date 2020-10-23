@@ -2,7 +2,8 @@
   "name": "server",
   "version": "0.0.0",
   "scripts": {
-    "dev": "nodemon index.js"
+    "dev": "nodemon index.js",
+    "start": "SNOWPACK_PUBLIC_WSS_PORT=6060 node index.js"
   },
   "dependencies": {
     "ws": "^7.3.1"

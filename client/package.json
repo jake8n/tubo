@@ -2,7 +2,7 @@
   "name": "client",
   "version": "0.0.0",
   "scripts": {
-    "build": "snowpack build",
+    "build": "SNOWPACK_PUBLIC_WSS_PORT=6060 snowpack build",
     "dev": "snowpack dev"
   },
   "dependencies": {
