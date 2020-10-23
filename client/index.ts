@@ -10,6 +10,8 @@ import debounce from "lodash.debounce";
 import io from 'socket.io-client'
 
 let view: EditorView;
+const syncAnnotation = Annotation.define();
+
 const windowSearch = new URLSearchParams(window.location.search)
 const room = windowSearch.get('room') || 'default'
 const socket = io(`ws://localhost:${(import.meta as any).env.SNOWPACK_PUBLIC_WSS_PORT}`, {
@@ -18,47 +20,13 @@ const socket = io(`ws://localhost:${(import.meta as any).env.SNOWPACK_PUBLIC_WSS
 socket.on('connect', () => console.debug('🐳 connected'))
 socket.on('joined', (doc: string) => {
   console.debug('joined')
-  actions.start(doc)
+  useEditor(doc)
 })
 socket.on('disconnect', () => console.debug('🐳 disconnect'))
-socket.on('update', (changes: ChangeSet) => {
+socket.on('update', async (changes: ChangeSet) => {
   console.debug('update')
-  actions.dispatch(ChangeSet.fromJSON(changes as any))
+  await view.dispatch({ changes: ChangeSet.fromJSON(changes as any), annotations: syncAnnotation.of(true) })
 })
-
-const syncAnnotation = Annotation.define();
-
-interface Actions {
-  dispatch: (changes: ChangeSet) => Promise<void>;
-  start: (doc: string) => void;
-}
-const actions: Actions = {
-  dispatch: async (changes: ChangeSet) => {
-    await view.dispatch({ changes, annotations: syncAnnotation.of(true) });
-  },
-  start: (doc: string) => useEditor(doc),
-};
-
-interface DispatchEvent {
-  type: "dispatch";
-  data: ChangeSet;
-}
-interface StartEvent {
-  type: "start";
-  data: string;
-}
-
-async function process(message: MessageEvent) {
-  const event: DispatchEvent | StartEvent = JSON.parse(message.data);
-  switch (event.type) {
-    case "dispatch":
-      actions.dispatch(ChangeSet.fromJSON(event.data as any));
-      break;
-    case "start":
-      actions.start(event.data as string);
-      break;
-  }
-}
 
 function syncDispatch(transaction: Transaction) {
   view.update([transaction]);
@@ -108,9 +76,8 @@ async function evaluateDocIframe() {
   iframeElement.contentWindow?.document.close();
 }
 
-const evaluateDocIframeDebounced = debounce(evaluateDocIframe, 500);
-
 function useEditor(doc: string) {
+  const evaluateDocIframeDebounced = debounce(evaluateDocIframe, 500);
   const state = EditorState.create({
     doc,
     extensions: [basicSetup, javascript()],
@@ -125,7 +92,6 @@ function useEditor(doc: string) {
       }
     },
   });
-
   // evaluate immediately on page load
   evaluateDocIframe();
 }
