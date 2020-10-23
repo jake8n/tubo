@@ -23,6 +23,8 @@ const socket = io(
 );
 socket.on("connect", () => console.debug("🐳 connected"));
 socket.on("joined", async (doc: string) => {
+  // TODO: remove current editor when reconnecting (e.g. if server restarts)
+  // TODO: detect no room in URL (only local development)
   console.debug("joined", { doc });
   const objectKey = window.location.hash.slice("#key=".length);
   if (objectKey) {
@@ -41,6 +43,7 @@ socket.on("joined", async (doc: string) => {
     );
     console.debug("imported key", key);
   } else {
+    // TODO: if no key, don't create web socket
     key = await window.crypto.subtle.generateKey(
       { name: "AES-GCM", length: 128 },
       true, 
