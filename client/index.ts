@@ -5,7 +5,7 @@ import {
 } from "@codemirror/next/basic-setup";
 import { javascript } from "@codemirror/next/lang-javascript";
 import { Annotation, ChangeSet, Transaction } from "@codemirror/next/state";
-import Realm from "realms-shim";
+import debounce from "lodash.debounce";
 
 let view: EditorView;
 const ws = new WebSocket(
@@ -14,8 +14,6 @@ const ws = new WebSocket(
 ws.onopen = () => console.log("connected 🎉");
 // TODO: onclose attempt to reconnect
 ws.onmessage = process;
-
-const r = Realm.makeRootRealm();
 
 const syncAnnotation = Annotation.define();
 
@@ -72,17 +70,44 @@ function syncDispatch(transaction: Transaction) {
 }
 
 // TODO: understand limitations e.g. async + import
-async function evaluateDoc() {
-  const outputElement = document.querySelector("#output") as Element;
-  const { doc } = view.state;
-  try {
-    const output = await r.evaluate(doc);
-    outputElement.innerHTML = output;
-  } catch (err) {
-    console.debug(err);
-    outputElement.innerHTML = err;
+// https://agoric.com/realms-shim-security-updates/
+// const r = Realm.makeRootRealm();
+// async function evaluateDoc() {
+//   const outputElement = document.querySelector("#output") as Element;
+//   const { doc } = view.state;
+//   try {
+//     const output = await r.evaluate(doc, {
+//       fetch: (input: RequestInfo, init?: RequestInit) => fetch(input, init),
+//       log: (...args: any[]) => {
+//         console.log(...args)
+//       },
+//     });
+//     outputElement.innerHTML = output;
+//   } catch (err) {
+//     console.debug(err);
+//     outputElement.innerHTML = err;
+//   }
+// }
+
+async function evaluateDocIframe() {
+  const iframes = document.querySelector("#iframes");
+  while (iframes?.firstChild) {
+    iframes.removeChild(iframes.firstChild);
   }
+  const iframeElement = document.createElement("iframe");
+  const { doc } = view.state;
+  // TODO: html should be configurable
+  const html = `<body>
+  <div id="app"></div>
+  <script type="module">${doc}</script>
+</body>`;
+  iframes?.appendChild(iframeElement);
+  iframeElement.contentWindow?.document.open();
+  iframeElement.contentWindow?.document.write(html);
+  iframeElement.contentWindow?.document.close();
 }
+
+const evaluateDocIframeDebounced = debounce(evaluateDocIframe, 500);
 
 function useEditor(doc: string) {
   const state = EditorState.create({
@@ -94,7 +119,12 @@ function useEditor(doc: string) {
     parent: document.querySelector("#editor") as Element,
     dispatch: async (transaction) => {
       syncDispatch(transaction);
-      await evaluateDoc();
+      if (!transaction.changes.empty) {
+        await evaluateDocIframeDebounced();
+      }
     },
   });
+
+  // evaluate immediately on page load
+  evaluateDocIframe();
 }
