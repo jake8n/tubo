@@ -7,34 +7,96 @@ import { javascript } from "@codemirror/next/lang-javascript";
 import { Annotation, ChangeSet, Transaction } from "@codemirror/next/state";
 import debounce from "lodash.debounce";
 // import Realm from 'realms-shim'
-import io from 'socket.io-client'
+import io from "socket.io-client";
 
 let view: EditorView;
+let key: CryptoKey;
 const syncAnnotation = Annotation.define();
 
-const windowSearch = new URLSearchParams(window.location.search)
-const room = windowSearch.get('room') || 'default'
-const socket = io(`ws://localhost:${(import.meta as any).env.SNOWPACK_PUBLIC_WSS_PORT}`, {
-  query: { room }
-})
-socket.on('connect', () => console.debug('🐳 connected'))
-socket.on('joined', (doc: string) => {
-  console.debug('joined')
-  useEditor(doc)
-})
-socket.on('disconnect', () => console.debug('🐳 disconnect'))
-socket.on('update', async (changes: ChangeSet) => {
-  console.debug('update')
-  await view.dispatch({ changes: ChangeSet.fromJSON(changes as any), annotations: syncAnnotation.of(true) })
-})
+const windowSearch = new URLSearchParams(window.location.search);
+const room = windowSearch.get("room") || "default";
+const socket = io(
+  `ws://localhost:${(import.meta as any).env.SNOWPACK_PUBLIC_WSS_PORT}`,
+  {
+    query: { room },
+  }
+);
+socket.on("connect", () => console.debug("🐳 connected"));
+socket.on("joined", async (doc: string) => {
+  console.debug("joined");
+  const objectKey = window.location.hash.slice('#key='.length)
+  key = await window.crypto.subtle.importKey(
+    "jwk",
+    {
+      k: objectKey,
+      alg: "A128GCM",
+      ext: true,
+      key_ops: ["encrypt", "decrypt"],
+      kty: "oct",
+    },
+    { name: "AES-GCM", length: 128 },
+    false, // extractable
+    ["decrypt"]
+  );
+  console.log(key)
+  await useEditor(doc);
+});
+socket.on("disconnect", () => console.debug("🐳 disconnect"));
+socket.on("update", async (changes: ChangeSet) => {
+  console.debug("update");
+  const decrypted = await decrypt(key, changes)
+  const parsed = JSON.parse(decrypted)
+  changes = ChangeSet.fromJSON(parsed)
+  console.log({ changes })
+  await view.dispatch({
+    changes,
+    annotations: syncAnnotation.of(true),
+  });
+});
 
-function syncDispatch(transaction: Transaction) {
+async function encrypt(key: CryptoKey, content: any) {
+  return await window.crypto.subtle.encrypt(
+    { name: "AES-GCM", iv: new Uint8Array(12) /* don't reuse key! */ },
+    key,
+    new TextEncoder().encode(content)
+  );
+}
+
+async function decrypt(key: CryptoKey, content: any) {
+  const decrypted = await window.crypto.subtle.decrypt(
+    { name: "AES-GCM", iv: new Uint8Array(12) },
+    key,
+    content
+  );
+  const decoded = new window.TextDecoder().decode(new Uint8Array(decrypted));
+  return decoded
+}
+
+async function syncDispatch(transaction: Transaction) {
   view.update([transaction]);
 
   if (!transaction.changes.empty && !transaction.annotation(syncAnnotation)) {
-    socket.emit('update', transaction.changes.toJSON())
+    // const key = await window.crypto.subtle.generateKey(
+    //   { name: "AES-GCM", length: 128 },
+    //   true, // extractable
+    //   ["encrypt", "decrypt"]
+    // );
+    console.debug('emit update')
+    try {
+      const transactionChangesJson = transaction.changes.toJSON()
+      console.log({ transactionChangesJson })
+      socket.emit(
+        "update",
+        await encrypt(key, JSON.stringify(transaction.changes.toJSON()))
+      );
+    } catch(err) {
+      console.error('error')
+      console.error(err)
+    }
     // TODO: less frequently sync doc
-    socket.emit('sync', view.state.doc)
+    // socket.emit("sync", await encrypt(key, view.state.doc));
+    // window.location.hash =
+    //   "#key=" + (await window.crypto.subtle.exportKey("jwk", key)).k;
   }
 }
 
@@ -76,7 +138,7 @@ async function evaluateDocIframe() {
   iframeElement.contentWindow?.document.close();
 }
 
-function useEditor(doc: string) {
+async function useEditor(doc: string) {
   const evaluateDocIframeDebounced = debounce(evaluateDocIframe, 500);
   const state = EditorState.create({
     doc,
@@ -86,12 +148,12 @@ function useEditor(doc: string) {
     state,
     parent: document.querySelector("#editor") as Element,
     dispatch: async (transaction) => {
-      syncDispatch(transaction);
+      await syncDispatch(transaction);
       if (!transaction.changes.empty) {
         await evaluateDocIframeDebounced();
       }
     },
   });
   // evaluate immediately on page load
-  evaluateDocIframe();
+  await evaluateDocIframe();
 }
