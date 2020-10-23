@@ -1,5 +1,7 @@
 {
   "devOptions": {
-    "open": "none"
+    "open": "none",
+    "output": "stream",
+    "port": 3000
   }
 }

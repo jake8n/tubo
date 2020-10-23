@@ -2,16 +2,18 @@
   "name": "client",
   "version": "0.0.0",
   "scripts": {
-    "build": "SNOWPACK_PUBLIC_WSS_PORT=6060 snowpack build",
+    "build": "SNOWPACK_PUBLIC_WSS_PORT=7071 snowpack build",
     "dev": "snowpack dev"
   },
   "dependencies": {
     "@codemirror/next": "^0.13.1",
     "lodash.debounce": "^4.0.8",
-    "realms-shim": "^1.2.2"
+    "realms-shim": "^1.2.2",
+    "socket.io-client": "^2.3.1"
   },
   "devDependencies": {
     "@types/lodash.debounce": "^4.0.6",
+    "@types/socket.io-client": "^1.4.34",
     "snowpack": "^2.14.3"
   }
 }

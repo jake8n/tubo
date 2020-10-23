@@ -6,7 +6,7 @@
     "server"
   ],
   "scripts": {
-    "dev": "SNOWPACK_PUBLIC_WSS_PORT=6060 lerna run dev --stream",
+    "dev": "SNOWPACK_PUBLIC_WSS_PORT=7071 lerna run dev --stream",
     "lint": "prettier --check .",
     "lint:fix": "prettier --write ."
   },

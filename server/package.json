@@ -3,10 +3,10 @@
   "version": "0.0.0",
   "scripts": {
     "dev": "nodemon index.js",
-    "start": "SNOWPACK_PUBLIC_WSS_PORT=6060 node index.js"
+    "start": "SNOWPACK_PUBLIC_WSS_PORT=7071 node index.js"
   },
   "dependencies": {
-    "ws": "^7.3.1"
+    "socket.io": "^2.3.0"
   },
   "devDependencies": {
     "nodemon": "^2.0.5"

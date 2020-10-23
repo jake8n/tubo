@@ -1,34 +1,14 @@
-const WebSocket = require("ws");
-
-const wss = new WebSocket.Server({
-  port: process.env.SNOWPACK_PUBLIC_WSS_PORT,
-});
-
-let doc = ``;
-
-wss.on("connection", (ws) => {
-  ws.send(
-    JSON.stringify({
-      type: "start",
-      data: doc,
-    })
-  );
-  ws.on("message", (message) => {
-    const { type, data } = JSON.parse(message);
-
-    switch (type) {
-      case "dispatch":
-        // relay message to all other clients
-        wss.clients.forEach((client) => {
-          if (client !== ws && client.readyState === WebSocket.OPEN) {
-            client.send(message);
-          }
-        });
-        break;
-      case "doc":
-        // sync doc for new connecting clients
-        doc = data.join("\n");
-        break;
-    }
-  });
-});
+const io = require('socket.io')({})
+// TODO: make persistent
+const docs = {}
+io.on('connection', socket => {
+  const { room } = socket.handshake
+  socket.join(room).emit('joined', docs[room])
+  socket.on('update', changes => {
+    socket.to(room).emit('update', changes)
+  })
+  socket.on('sync', doc => {
+    docs[room] = doc.join('\n')
+  })
+})
+io.listen(process.env.SNOWPACK_PUBLIC_WSS_PORT)

@@ -6,14 +6,25 @@ import {
 import { javascript } from "@codemirror/next/lang-javascript";
 import { Annotation, ChangeSet, Transaction } from "@codemirror/next/state";
 import debounce from "lodash.debounce";
+// import Realm from 'realms-shim'
+import io from 'socket.io-client'
 
 let view: EditorView;
-const ws = new WebSocket(
-  `ws://localhost:${(import.meta as any).env.SNOWPACK_PUBLIC_WSS_PORT}`
-);
-ws.onopen = () => console.log("connected 🎉");
-// TODO: onclose attempt to reconnect
-ws.onmessage = process;
+const windowSearch = new URLSearchParams(window.location.search)
+const room = windowSearch.get('room') || 'default'
+const socket = io(`ws://localhost:${(import.meta as any).env.SNOWPACK_PUBLIC_WSS_PORT}`, {
+  query: { room }
+})
+socket.on('connect', () => console.debug('🐳 connected'))
+socket.on('joined', (doc: string) => {
+  console.debug('joined')
+  actions.start(doc)
+})
+socket.on('disconnect', () => console.debug('🐳 disconnect'))
+socket.on('update', (changes: ChangeSet) => {
+  console.debug('update')
+  actions.dispatch(ChangeSet.fromJSON(changes as any))
+})
 
 const syncAnnotation = Annotation.define();
 
@@ -53,19 +64,9 @@ function syncDispatch(transaction: Transaction) {
   view.update([transaction]);
 
   if (!transaction.changes.empty && !transaction.annotation(syncAnnotation)) {
-    ws.send(
-      JSON.stringify({
-        type: "dispatch",
-        data: transaction.changes.toJSON(),
-      })
-    );
+    socket.emit('update', transaction.changes.toJSON())
     // TODO: less frequently sync doc
-    ws.send(
-      JSON.stringify({
-        type: "doc",
-        data: view.state.doc,
-      })
-    );
+    socket.emit('sync', view.state.doc)
   }
 }
 
