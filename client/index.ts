@@ -23,31 +23,47 @@ const socket = io(
 );
 socket.on("connect", () => console.debug("🐳 connected"));
 socket.on("joined", async (doc: string) => {
-  console.debug("joined");
-  const objectKey = window.location.hash.slice('#key='.length)
-  key = await window.crypto.subtle.importKey(
-    "jwk",
-    {
-      k: objectKey,
-      alg: "A128GCM",
-      ext: true,
-      key_ops: ["encrypt", "decrypt"],
-      kty: "oct",
-    },
-    { name: "AES-GCM", length: 128 },
-    false, // extractable
-    ["decrypt"]
-  );
-  console.log(key)
-  await useEditor(doc);
+  console.debug("joined", { doc });
+  const objectKey = window.location.hash.slice("#key=".length);
+  if (objectKey) {
+    key = await window.crypto.subtle.importKey(
+      "jwk",
+      {
+        k: objectKey,
+        alg: "A128GCM",
+        ext: false,
+        key_ops: ["encrypt", "decrypt"],
+        kty: "oct",
+      },
+      { name: "AES-GCM", length: 128 },
+      false,
+      ["encrypt", "decrypt"]
+    );
+    console.debug("imported key", key);
+  } else {
+    key = await window.crypto.subtle.generateKey(
+      { name: "AES-GCM", length: 128 },
+      true, 
+      ["encrypt", "decrypt"]
+    );
+    window.location.hash =
+      "#key=" + (await window.crypto.subtle.exportKey("jwk", key)).k;
+    console.debug("generated key", key);
+  }
+  if (doc) {
+    const decrypted = await decrypt(key, doc);
+    console.debug('decrypted', decrypted)
+    await useEditor(JSON.parse(decrypted).join('\n'));
+  } else {
+    await useEditor("");
+  }
 });
 socket.on("disconnect", () => console.debug("🐳 disconnect"));
 socket.on("update", async (changes: ChangeSet) => {
-  console.debug("update");
-  const decrypted = await decrypt(key, changes)
-  const parsed = JSON.parse(decrypted)
-  changes = ChangeSet.fromJSON(parsed)
-  console.log({ changes })
+  console.debug("update", { changes });
+  const decrypted = await decrypt(key, changes);
+  const parsed = JSON.parse(decrypted);
+  changes = ChangeSet.fromJSON(parsed);
   await view.dispatch({
     changes,
     annotations: syncAnnotation.of(true),
@@ -69,34 +85,18 @@ async function decrypt(key: CryptoKey, content: any) {
     content
   );
   const decoded = new window.TextDecoder().decode(new Uint8Array(decrypted));
-  return decoded
+  return decoded;
 }
 
 async function syncDispatch(transaction: Transaction) {
   view.update([transaction]);
-
   if (!transaction.changes.empty && !transaction.annotation(syncAnnotation)) {
-    // const key = await window.crypto.subtle.generateKey(
-    //   { name: "AES-GCM", length: 128 },
-    //   true, // extractable
-    //   ["encrypt", "decrypt"]
-    // );
-    console.debug('emit update')
-    try {
-      const transactionChangesJson = transaction.changes.toJSON()
-      console.log({ transactionChangesJson })
-      socket.emit(
-        "update",
-        await encrypt(key, JSON.stringify(transaction.changes.toJSON()))
-      );
-    } catch(err) {
-      console.error('error')
-      console.error(err)
-    }
+    socket.emit(
+      "update",
+      await encrypt(key, JSON.stringify(transaction.changes.toJSON()))
+    );
     // TODO: less frequently sync doc
-    // socket.emit("sync", await encrypt(key, view.state.doc));
-    // window.location.hash =
-    //   "#key=" + (await window.crypto.subtle.exportKey("jwk", key)).k;
+    socket.emit("sync", await encrypt(key, JSON.stringify(view.state.doc)));
   }
 }
 
