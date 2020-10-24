@@ -2,30 +2,10 @@
 import { close, emit, trigger } from "socket.io-client";
 import { Socket } from ".";
 
-class TextDecoderMock {
-  decode() {
-    return '["decoded"]';
-  }
-}
-class TextEncoderMock {
-  encode() {}
-}
-
 describe("Socket", () => {
   let socket: Socket;
 
   beforeEach(() => {
-    global.crypto = {
-      // @ts-ignore
-      subtle: {
-        decrypt: jest.fn().mockResolvedValue("decrypted"),
-        encrypt: jest.fn().mockResolvedValue("#encrypted#"),
-      },
-    };
-    // @ts-ignore
-    global.TextDecoder = TextDecoderMock;
-    // @ts-ignore
-    global.TextEncoder = TextEncoderMock;
     socket = new Socket({
       uri: "uri",
       room: "room",
