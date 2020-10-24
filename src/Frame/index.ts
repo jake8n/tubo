@@ -1,21 +1,17 @@
 interface FrameConfig {
+  js: string;
   parent: Element;
-  js?: string;
-  body?: string;
-  css?: string;
 }
 
 export class Frame {
-  #js?: string = "";
-  #body?: string = "";
-  #css?: string = "";
+  #js: string;
+  #body: string = '<div id="app"></div>';
+  #css: string = "body { font-family: sans-serif; }";
   parent: Element;
   iframe: HTMLIFrameElement;
 
   constructor(config: FrameConfig) {
-    this.#js = config.js ? config.js : this.#js;
-    this.#body = config.body ? config.body : this.#body;
-    this.#css = config.css ? config.css : this.#css;
+    this.#js = config.js;
     this.parent = config.parent;
     this.iframe = document.createElement("iframe");
     this.parent.appendChild(this.iframe);
@@ -25,6 +21,10 @@ export class Frame {
   set js(value: string) {
     this.#js = value;
     this.render();
+  }
+
+  get js() {
+    return this.#js;
   }
 
   set body(value: string) {
