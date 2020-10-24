@@ -4,47 +4,14 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>CodeMirror</title>
-    <style>
-      html {
-        height: 100%;
-      }
-      body {
-        display: flex;
-        flex-direction: column;
-        height: 100%;
-        margin: 0;
-      }
-      main {
-        display: flex;
-        flex: 1;
-        flex-direction: column;
-        height: 100%;
-      }
-      main > * {
-        height: 50%;
-      }
-      #frame > iframe {
-        border: none;
-        height: 100%;
-        width: 100%;
-      }
-      .cm-wrap {
-        height: 100%;
-      }
-      .cm-focused {
-        /* TODO: accessbility */
-        outline: none !important;
-      }
-    </style>
+    <link rel="stylesheet" href="./index.css" />
   </head>
   <body>
     <header>
       <button id="share">Share</button>
     </header>
-    <main>
-      <div id="view"></div>
-      <div id="frame"></div>
-    </main>
+    <div id="view"></div>
+    <div id="frame"></div>
     <script type="module">
       import "./src/index";
     </script>
