@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CodeMirror</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.0.0-beta.21/dist/shoelace/shoelace.css"
+    />
+    <script
+      type="module"
+      src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.0.0-beta.21/dist/shoelace/shoelace.esm.js"
+    ></script>
+    <!-- <style>
+      html { height: 100%; }
+      body {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        margin: 0;
+      }
+      main {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        height: 100%;
+      }
+      main > * {
+        height: 50%;
+      }
+      #iframe > iframe {
+        border: none;
+        height: 100%;
+        width: 100%;
+      }
+      .cm-wrap {
+        height: 100%;
+      }
+      .cm-focused {
+        /* TODO: accessbility */
+        outline: none !important;
+      }
+    </style> -->
+  </head>
+  <body>
+    <main>
+      <sl-tab-group>
+        <sl-tab slot="nav" panel="js">index.js</sl-tab>
+        <sl-tab slot="nav" panel="html">index.html</sl-tab>
+
+        <sl-tab-panel name="js">
+          <div id="editor"></div>
+        </sl-tab-panel>
+        <sl-tab-panel name="html">
+          <div>HTML</div>
+        </sl-tab-panel>
+      </sl-tab-group>
+      <div id="iframe"></div>
+    </main>
+    <script type="module">
+      import "./index";
+    </script>
+  </body>
+</html>
