@@ -133,7 +133,6 @@ async function syncDispatch(transaction: Transaction) {
 
 function renderFrame(js: string) {
   frame.js = js;
-  console.log(frame.iframe.contentDocument?.body.innerHTML);
 }
 
 async function useEditor(doc: string) {

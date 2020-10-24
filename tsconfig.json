@@ -3,7 +3,7 @@
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
     "importHelpers": true,
-    "module": "esnext",
+    "module": "ESNext",
     "moduleResolution": "node",
     "removeComments": true,
     "strict": true,
