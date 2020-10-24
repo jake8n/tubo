@@ -6,8 +6,14 @@ import {
 import { javascript } from "@codemirror/next/lang-javascript";
 import { Annotation, ChangeSet, Transaction } from "@codemirror/next/state";
 import debounce from "lodash.debounce";
-// import Realm from 'realms-shim'
 import io from "socket.io-client";
+import { Frame } from "./src/Frame";
+
+const frame = new Frame({
+  parent: document.querySelector("#iframe") as Element,
+  body: '<div id="app"></div>',
+  css: "body { font-family: sans-serif; }",
+});
 
 let view: EditorView;
 let key: CryptoKey;
@@ -46,7 +52,7 @@ socket.on("joined", async (doc: string) => {
     // TODO: if no key, don't create web socket
     key = await window.crypto.subtle.generateKey(
       { name: "AES-GCM", length: 128 },
-      true, 
+      true,
       ["encrypt", "decrypt"]
     );
     window.location.hash =
@@ -55,10 +61,32 @@ socket.on("joined", async (doc: string) => {
   }
   if (doc) {
     const decrypted = await decrypt(key, doc);
-    console.debug('decrypted', decrypted)
-    await useEditor(JSON.parse(decrypted).join('\n'));
+    console.debug("decrypted", decrypted);
+    await useEditor(JSON.parse(decrypted).join("\n"));
   } else {
-    await useEditor("");
+    await useEditor(`import Vue from 'https://cdn.skypack.dev/vue@2.6.12/dist/vue.esm.browser.js'
+
+// turn off console logs 👿
+Vue.config.productionTip = false
+Vue.config.devtools = false
+
+const app = new Vue({
+  el: '#app',
+  data: {
+    count: 1
+  },
+  methods: {
+    increment () {
+      this.count++
+    }
+  },
+  template: \`
+  <div>
+    <h1>{{ count }}</h1>
+    <button @click="increment">Increment</button>
+  </div>
+\`
+})`);
   }
 });
 socket.on("disconnect", () => console.debug("🐳 disconnect"));
@@ -103,46 +131,13 @@ async function syncDispatch(transaction: Transaction) {
   }
 }
 
-// TODO: understand limitations e.g. async + import
-// https://agoric.com/realms-shim-security-updates/
-// const r = Realm.makeRootRealm();
-// async function evaluateDoc() {
-//   const outputElement = document.querySelector("#output") as Element;
-//   const { doc } = view.state;
-//   try {
-//     const output = await r.evaluate(doc, {
-//       fetch: (input: RequestInfo, init?: RequestInit) => fetch(input, init),
-//       log: (...args: any[]) => {
-//         console.log(...args)
-//       },
-//     });
-//     outputElement.innerHTML = output;
-//   } catch (err) {
-//     console.debug(err);
-//     outputElement.innerHTML = err;
-//   }
-// }
-
-async function evaluateDocIframe() {
-  const iframes = document.querySelector("#iframes");
-  while (iframes?.firstChild) {
-    iframes.removeChild(iframes.firstChild);
-  }
-  const iframeElement = document.createElement("iframe");
-  const { doc } = view.state;
-  // TODO: html should be configurable
-  const html = `<body>
-  <div id="app"></div>
-  <script type="module">${doc}</script>
-</body>`;
-  iframes?.appendChild(iframeElement);
-  iframeElement.contentWindow?.document.open();
-  iframeElement.contentWindow?.document.write(html);
-  iframeElement.contentWindow?.document.close();
+function renderFrame(js: string) {
+  frame.js = js;
+  console.log(frame.iframe.contentDocument?.body.innerHTML);
 }
 
 async function useEditor(doc: string) {
-  const evaluateDocIframeDebounced = debounce(evaluateDocIframe, 500);
+  const renderFrameDebounced = debounce(renderFrame, 500);
   const state = EditorState.create({
     doc,
     extensions: [basicSetup, javascript()],
@@ -153,10 +148,10 @@ async function useEditor(doc: string) {
     dispatch: async (transaction) => {
       await syncDispatch(transaction);
       if (!transaction.changes.empty) {
-        await evaluateDocIframeDebounced();
+        renderFrameDebounced((view.state.doc as unknown) as string);
       }
     },
   });
   // evaluate immediately on page load
-  await evaluateDocIframe();
+  renderFrame((view.state.doc as unknown) as string);
 }
