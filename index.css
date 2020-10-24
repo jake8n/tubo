@@ -1,0 +1,26 @@
+html,
+body {
+  height: 100%;
+}
+body {
+  display: grid;
+  grid-template-rows: auto 1fr 1fr;
+  margin: 0;
+}
+header {
+  max-height: 100%;
+}
+#view,
+#frame {
+  overflow: auto;
+}
+.cm-focused {
+  /* TODO: accessbility */
+  outline: none !important;
+}
+#frame > iframe {
+  border: none;
+  display: block;
+  height: 100%;
+  width: 100%;
+}

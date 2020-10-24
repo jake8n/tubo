@@ -79,7 +79,7 @@ export class Controller {
       this.useView();
     });
     this.#socket.on("update", (json: JSON) => {
-      console.log("incoming");
+      console.debug("Controller:incoming");
       if (!this.#view) return;
       const changes = ChangeSet.fromJSON(json as any);
       this.#view.incoming(changes);
@@ -101,11 +101,12 @@ export class Controller {
     });
   }
 
-  outgoing(doc: string, transaction: Transaction) {
+  outgoing(doc: string, transaction: Transaction, isSync: boolean = false) {
     if (!this.#frame) return;
     this.#frame.js = doc;
     this.#persistence.js = doc;
-    if (!this.#socket) return;
+    if (!this.#socket || isSync) return;
+    console.debug("Controller:outgoing");
     this.#socket.emit("update", JSON.stringify(transaction.changes.toJSON()));
     this.#socket.emit("sync", JSON.stringify(doc));
   }

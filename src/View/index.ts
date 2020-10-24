@@ -1,4 +1,3 @@
-import { Frame } from "../Frame";
 import {
   basicSetup,
   EditorState,
@@ -38,13 +37,14 @@ export class View {
   }
 
   dispatch(transaction: Transaction) {
+    console.debug("View:dispatch");
     this.#editor.update([transaction]);
-    if (
-      this.#outgoing &&
-      !transaction.changes.empty &&
-      !transaction.annotation(this.#syncAnnotation)
-    ) {
-      this.#outgoing(this.#editor.state.doc, transaction);
+    if (!transaction.changes.empty) {
+      this.#outgoing(
+        this.#editor.state.doc,
+        transaction,
+        transaction.annotation(this.#syncAnnotation)
+      );
     }
   }
 
