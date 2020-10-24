@@ -15,30 +15,30 @@ describe("KeyManager", () => {
     keyManager = new KeyManager();
   });
 
-  it("is alive", () => {
+  test("is alive", () => {
     expect(keyManager).toBeTruthy();
   });
 
   describe("generate", () => {
-    it("create a new key", async () => {
+    test("create new key", async () => {
       await keyManager.generate();
       expect(keyManager.key).toBeDefined();
     });
   });
 
   describe("export", () => {
-    it("exports key when it is defined", async () => {
+    test("export key when it is defined", async () => {
       await keyManager.generate();
       expect(await keyManager.export()).toEqual("key");
     });
 
-    it("throws error if key is undefined", () => {
+    test("throw error if key is undefined", () => {
       expect(() => keyManager.export()).rejects.toThrow("key is undefined");
     });
   });
 
   describe("import", () => {
-    it("generates an existing key from an input string", async () => {
+    test("generate an existing key from an input string", async () => {
       await keyManager.import("key");
       expect(keyManager.key).toBeDefined();
     });
