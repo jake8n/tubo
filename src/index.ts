@@ -1,10 +1,3 @@
-class KeyManager {
-  // get key
-  // set key
-  // generate key
-  // derive key
-}
-
 class Editor {
   // initial text
   // dispatch
@@ -32,3 +25,7 @@ class Socket {
   // dispatch js
   // dispatch css
 }
+
+import { Frame } from "./Frame";
+
+const frame = new Frame({ parent: document.createElement("div") });

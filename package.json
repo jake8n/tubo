@@ -6,7 +6,7 @@
     "dev": "SNOWPACK_PUBLIC_WSS_PORT=7000 snowpack dev",
     "lint": "prettier --check .",
     "lint:fix": "prettier --write .",
-    "test": "jest",
+    "test": "jest --coverage",
     "test.watch": "jest --watch"
   },
   "husky": {

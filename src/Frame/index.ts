@@ -6,9 +6,9 @@ interface FrameConfig {
 }
 
 export class Frame {
-  #js: string = "";
-  #body: string = "";
-  #css: string = "";
+  #js?: string = "";
+  #body?: string = "";
+  #css?: string = "";
   parent: Element;
   iframe: HTMLIFrameElement;
 
