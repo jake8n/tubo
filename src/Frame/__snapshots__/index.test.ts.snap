@@ -17,11 +17,11 @@ exports[`Frame toHTML custom inputs 1`] = `
 exports[`Frame toHTML empty state 1`] = `
 "<head>
   <style>
-    
+    body { font-family: sans-serif; }
   </style>
 </head>
 <body>
-  
+  <div id=\\"app\\"></div>
   <script type=\\"module\\">
     
   </script>

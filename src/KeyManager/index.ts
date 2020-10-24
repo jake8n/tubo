@@ -4,7 +4,7 @@ export class KeyManager {
   key?: CryptoKey;
 
   async generate(): Promise<void> {
-    this.key = (await global.crypto.subtle.generateKey(
+    this.key = (await window.crypto.subtle.generateKey(
       this.#algorithm,
       true,
       this.#keyUsages
@@ -14,7 +14,6 @@ export class KeyManager {
   async export(): Promise<string> {
     if (this.key) {
       const { k } = await window.crypto.subtle.exportKey("jwk", this.key);
-
       return k as string;
     } else {
       throw new Error("key is undefined");

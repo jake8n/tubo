@@ -5,7 +5,7 @@ describe("Frame", () => {
 
   beforeEach(() => {
     parent = document.createElement("div");
-    frame = new Frame({ parent });
+    frame = new Frame({ js: "", parent });
   });
 
   test("is alive", () => {
@@ -19,7 +19,7 @@ describe("Frame", () => {
 
     test("perform the first render", () => {
       const spy = jest.spyOn(Frame.prototype, "render");
-      frame = new Frame({ parent });
+      frame = new Frame({ js: "", parent });
       expect(spy).toHaveBeenCalled();
     });
   });

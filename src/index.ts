@@ -1,17 +1,22 @@
-import { Frame } from "./Frame";
-import { View } from "./View";
+import { Persistence } from "./Persistence";
+import { Controller } from "./Controller";
 
-const frame = new Frame({
-  parent: document.querySelector("#iframe") as Element,
-  body: '<div id="app"></div>',
-  css: "body { font-family: sans-serif; }",
-});
+// shared state
+// local state, get from local storage, set to local storage
+// shared state, get from remote, sync to remote
 
-new View({
-  doc: "console.log('hello world')",
-  frame,
-  parent: document.querySelector("#editor") as Element,
+// derive current state (local or shared)
+// create frame
+// create view
+
+// TODO: if local/shared
+const persistence = new Persistence();
+const controller = new Controller({ persistence });
+const button = document.querySelector("#share") as Element;
+button.addEventListener("click", async () => {
+  await controller.share();
 });
+controller.start();
 
 // async function start() {
 //   const keyManager = new KeyManager();

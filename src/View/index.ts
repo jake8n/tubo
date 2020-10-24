@@ -1,68 +1,57 @@
+import { Frame } from "../Frame";
 import {
   basicSetup,
   EditorState,
   EditorView,
 } from "@codemirror/next/basic-setup";
 import { javascript } from "@codemirror/next/lang-javascript";
-import { Annotation, ChangeSet, Transaction } from "@codemirror/next/state";
-import { Frame } from "../Frame";
-import { Socket } from "../Socket";
+import {
+  Annotation,
+  AnnotationType,
+  ChangeSet,
+  Transaction,
+} from "@codemirror/next/state";
 
-interface ViewConfig {
-  doc: string;
-  frame: Frame;
-  socket?: Socket;
+export interface ViewConfig {
+  js: string;
   parent: Element;
+  outgoing: Function;
 }
 
 export class View {
-  #frame: Frame;
-  #socket: Socket | null;
-  #doc: string;
-  #state: EditorState;
-  #parent: Element;
-  view: EditorView;
+  #editor: EditorView;
+  #outgoing: Function;
+  #syncAnnotation: AnnotationType<unknown>;
 
   constructor(config: ViewConfig) {
-    this.#frame = config.frame;
-    this.#socket = config.socket ? config.socket : null;
-    this.#doc = config.doc;
-    this.#state = EditorState.create({
-      doc: this.#doc,
+    this.#outgoing = config.outgoing;
+    const state = EditorState.create({
+      doc: config.js,
       extensions: [basicSetup, javascript()],
     });
-    this.#parent = config.parent;
-    this.view = new EditorView({
-      state: this.#state,
-      parent: this.#parent,
-      dispatch: this.onDispatch.bind(this),
+    this.#editor = new EditorView({
+      state,
+      parent: config.parent,
+      dispatch: this.dispatch.bind(this),
     });
+    this.#syncAnnotation = Annotation.define();
   }
 
-  onDispatch(transaction: Transaction) {
-    this.syncDispatch(transaction);
+  dispatch(transaction: Transaction) {
+    this.#editor.update([transaction]);
     if (
+      this.#outgoing &&
       !transaction.changes.empty &&
-      !transaction.annotation(Annotation.define())
+      !transaction.annotation(this.#syncAnnotation)
     ) {
-      this.#frame.js = (this.view.state.doc as unknown) as string;
-
-      if (this.#socket) {
-        this.#socket.emit(
-          "update",
-          JSON.stringify(transaction.changes.toJSON())
-        );
-        // TODO: less frequently sync
-        this.#socket.emit("sync", JSON.stringify(this.view.state.doc));
-      }
+      this.#outgoing(this.#editor.state.doc, transaction);
     }
   }
 
-  syncDispatch(transaction: Transaction) {
-    this.view.update([transaction]);
-  }
-
-  dispatch(changes: ChangeSet) {
-    this.view.dispatch({ changes, annotations: Annotation.define().of(true) });
+  incoming(changes: ChangeSet) {
+    this.#editor.dispatch({
+      changes,
+      annotations: this.#syncAnnotation.of(true),
+    });
   }
 }
