@@ -1,12 +1,13 @@
 {
   "compilerOptions": {
     "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "importHelpers": true,
     "module": "ESNext",
     "moduleResolution": "node",
     "removeComments": true,
     "strict": true,
-    "target": "ESNext"
+    "target": "ES6"
   }
 }
