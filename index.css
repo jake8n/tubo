@@ -10,9 +10,17 @@ body {
 header {
   max-height: 100%;
 }
-#view,
+#views,
 #frame {
   overflow: auto;
+}
+#views {
+  display: flex;
+}
+#views > * {
+  flex: 1;
+  overflow: auto;
+  width: calc(100% / 3);
 }
 .cm-focused {
   /* TODO: accessbility */

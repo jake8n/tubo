@@ -3,16 +3,17 @@ import {
   EditorState,
   EditorView,
 } from "@codemirror/next/basic-setup";
-import { javascript } from "@codemirror/next/lang-javascript";
 import {
   Annotation,
   AnnotationType,
   ChangeSet,
+  Extension,
   Transaction,
 } from "@codemirror/next/state";
 
 export interface ViewConfig {
-  js: string;
+  extensions: Extension[];
+  initialState: string;
   parent: Element;
   outgoing: Function;
 }
@@ -25,8 +26,8 @@ export class View {
   constructor(config: ViewConfig) {
     this.#outgoing = config.outgoing;
     const state = EditorState.create({
-      doc: config.js,
-      extensions: [basicSetup, javascript()],
+      doc: config.initialState,
+      extensions: [basicSetup, ...config.extensions],
     });
     this.#editor = new EditorView({
       state,
