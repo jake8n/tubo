@@ -2,23 +2,24 @@ import debounce from "lodash.debounce";
 
 interface FrameConfig {
   js: string;
+  html: string;
+  css: string;
   parent: Element;
 }
 
 export class Frame {
   #js: string;
-  #body: string = '<div id="app"></div>';
-  #css: string = "body { font-family: sans-serif; }";
+  #html: string;
+  #css: string;
   #renderDebounced: Function;
   parent: Element;
-  iframe: HTMLIFrameElement;
 
   constructor(config: FrameConfig) {
     this.#js = config.js;
+    this.#html = config.html;
+    this.#css = config.css;
     this.#renderDebounced = debounce(this.render, 200);
     this.parent = config.parent;
-    this.iframe = document.createElement("iframe");
-    this.parent.appendChild(this.iframe);
     this.render();
   }
 
@@ -31,8 +32,8 @@ export class Frame {
     return this.#js;
   }
 
-  set body(value: string) {
-    this.#body = value;
+  set html(value: string) {
+    this.#html = value;
     this.#renderDebounced();
   }
 
@@ -48,7 +49,7 @@ export class Frame {
   </style>
 </head>
 <body>
-  ${this.#body}
+  ${this.#html}
   <script type="module">
     ${this.#js}
   </script>
@@ -58,8 +59,14 @@ export class Frame {
   render() {
     console.debug("Frame:render");
     // TODO: avoid document write
-    this.iframe.contentWindow?.document.open();
-    this.iframe.contentWindow?.document.write(this.toHTML());
-    this.iframe.contentWindow?.document.close();
+    while (this.parent.lastChild) {
+      this.parent.removeChild(this.parent.lastChild);
+    }
+    // create new iframe each time to reset registered elements
+    const iframe = document.createElement("iframe");
+    this.parent.appendChild(iframe);
+    iframe.contentWindow?.document.open();
+    iframe.contentWindow?.document.write(this.toHTML());
+    iframe.contentWindow?.document.close();
   }
 }
