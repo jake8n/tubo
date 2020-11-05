@@ -1,6 +1,6 @@
 export class Persistence {
   get js(): string {
-    return localStorage.getItem("js") || "";
+    return localStorage.getItem("js") || "// script.js";
   }
 
   set js(value: string) {
@@ -8,7 +8,7 @@ export class Persistence {
   }
 
   get html(): string {
-    return localStorage.getItem("html") || "";
+    return localStorage.getItem("html") || "<!-- index.html -->";
   }
 
   set html(value: string) {
@@ -16,7 +16,7 @@ export class Persistence {
   }
 
   get css(): string {
-    return localStorage.getItem("css") || "";
+    return localStorage.getItem("css") || "/* main.css */";
   }
 
   set css(value: string) {
