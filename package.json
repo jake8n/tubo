@@ -1,5 +1,5 @@
 {
-  "name": "client",
+  "name": "tubo",
   "version": "0.0.0",
   "scripts": {
     "build": "SNOWPACK_PUBLIC_WSS_PORT=7000 snowpack build",
