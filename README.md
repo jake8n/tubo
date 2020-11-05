@@ -1,17 +1,18 @@
-# CodeMirror 6 Yjs 💎
+# Tubo 💎
 
 Exploring shared code environments.
 
-## Setup 🔧
+## Key technology
 
-- Yarn workspaces
-- Lerna
-- CodeMirror@6
-- Yjs
+- Snowpack
+- Codemirror 6
+- Socket.io
+- SubtleCrypto
+- TypeScript
 
-## Demo
+## Development
 
 ```bash
 yarn
-yarn run dev # start server and client
+yarn run dev
 ```
