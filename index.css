@@ -10,9 +10,6 @@ body {
 header {
   max-height: 100%;
 }
-#share {
-  display: none;
-}
 #views,
 #frame {
   overflow: auto;
