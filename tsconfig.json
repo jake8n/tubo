@@ -4,10 +4,14 @@
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "importHelpers": true,
+    "jsx": "react",
     "module": "ESNext",
     "moduleResolution": "node",
+    "noEmit": true,
     "removeComments": true,
+    "skipLibCheck": true,
     "strict": true,
     "target": "ES6"
-  }
+  },
+  "exclude": ["**/*.test.ts"]
 }
