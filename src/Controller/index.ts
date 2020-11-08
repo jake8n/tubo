@@ -68,9 +68,7 @@ export class Controller {
 
   setSocket() {
     this.#socket = new Socket({
-      uri: `ws://localhost:${
-        (import.meta as any).env.SNOWPACK_PUBLIC_WSS_PORT
-      }`,
+      uri: (import.meta as any).env.SNOWPACK_PUBLIC_SOCKET_URI,
       room: this.#room,
       key: this.#keyManager.key as CryptoKey,
     });

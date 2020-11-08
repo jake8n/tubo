@@ -2,8 +2,8 @@
   "name": "tubo",
   "version": "0.0.0",
   "scripts": {
-    "build": "SNOWPACK_PUBLIC_WSS_PORT=7000 snowpack build",
-    "dev": "SNOWPACK_PUBLIC_WSS_PORT=7000 snowpack dev",
+    "build": "snowpack build",
+    "dev": "SNOWPACK_PUBLIC_SOCKET_URI=\"wss://localhost:7000\"// snowpack dev",
     "lint": "prettier --check .",
     "lint:fix": "prettier --write .",
     "test": "jest --coverage",
