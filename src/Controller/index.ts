@@ -7,6 +7,7 @@ import { Socket } from "../Socket";
 import { javascript } from "@codemirror/next/lang-javascript";
 import { html } from "@codemirror/next/lang-html";
 import { css } from "@codemirror/next/lang-css";
+import { nanoid } from "nanoid";
 
 export interface ControllerConfig {
   persistence: Persistence;
@@ -61,8 +62,9 @@ export class Controller {
     (this.#socket as Socket).emit("sync", JSON.stringify(this.#persistence.js));
     // TODO: avoid page refresh (and send current local storage to server)
     // set room on window
+    const room = nanoid();
     const searchParams = new URLSearchParams();
-    searchParams.set("room", "test");
+    searchParams.set("room", room);
     window.location.search = searchParams.toString();
   }
 

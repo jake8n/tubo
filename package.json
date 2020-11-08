@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "scripts": {
     "build": "snowpack build",
-    "dev": "SNOWPACK_PUBLIC_SOCKET_URI=\"wss://localhost:7000\"// snowpack dev",
+    "dev": "SNOWPACK_PUBLIC_SOCKET_URI=\"ws://localhost:7000\"/ snowpack dev",
     "lint": "prettier --check .",
     "lint:fix": "prettier --write .",
     "test": "jest --coverage",
@@ -17,6 +17,7 @@
   "dependencies": {
     "@codemirror/next": "^0.13.1",
     "lodash.debounce": "^4.0.8",
+    "nanoid": "^3.1.16",
     "socket.io-client": "^2.3.1"
   },
   "devDependencies": {
