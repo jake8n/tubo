@@ -19,40 +19,40 @@ export interface ViewConfig {
 }
 
 export class View {
-  #editor: EditorView;
-  #outgoing: Function;
-  #syncAnnotation: AnnotationType<unknown>;
+  private _editor: EditorView;
+  private _outgoing: Function;
+  private _syncAnnotation: AnnotationType<unknown>;
 
   constructor(config: ViewConfig) {
-    this.#outgoing = config.outgoing;
+    this._outgoing = config.outgoing;
     const state = EditorState.create({
       doc: config.initialState,
       extensions: [basicSetup, ...config.extensions],
     });
-    this.#editor = new EditorView({
+    this._editor = new EditorView({
       state,
       parent: config.parent,
       dispatch: this.dispatch.bind(this),
     });
-    this.#syncAnnotation = Annotation.define();
+    this._syncAnnotation = Annotation.define();
   }
 
   dispatch(transaction: Transaction) {
     console.debug("View:dispatch");
-    this.#editor.update([transaction]);
+    this._editor.update([transaction]);
     if (!transaction.changes.empty) {
-      this.#outgoing(
-        this.#editor.state.doc,
+      this._outgoing(
+        this._editor.state.doc,
         transaction,
-        transaction.annotation(this.#syncAnnotation)
+        transaction.annotation(this._syncAnnotation)
       );
     }
   }
 
   incoming(changes: ChangeSet) {
-    this.#editor.dispatch({
+    this._editor.dispatch({
       changes,
-      annotations: this.#syncAnnotation.of(true),
+      annotations: this._syncAnnotation.of(true),
     });
   }
 }
