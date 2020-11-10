@@ -7,5 +7,6 @@
     "output": "stream",
     "port": 3000,
     "secure": true
-  }
+  },
+  "plugins": ["@snowpack/plugin-typescript"]
 }

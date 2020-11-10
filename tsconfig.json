@@ -4,11 +4,15 @@
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "importHelpers": true,
+    "jsx": "react",
     "lib": ["DOM", "ESNext"],
     "module": "ESNext",
     "moduleResolution": "node",
+    "noEmit": true,
     "removeComments": true,
+    "skipLibCheck": true,
     "strict": true,
-    "target": "ES5"
-  }
+    "target": "ES6"
+  },
+  "exclude": ["**/*.test.ts"]
 }
