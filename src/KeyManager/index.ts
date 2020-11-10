@@ -1,13 +1,13 @@
 export class KeyManager {
-  #algorithm: AesKeyGenParams = { name: "AES-GCM", length: 128 };
-  #keyUsages: KeyUsage[] = ["encrypt", "decrypt"];
+  private _algorithm: AesKeyGenParams = { name: "AES-GCM", length: 128 };
+  private _keyUsages: KeyUsage[] = ["encrypt", "decrypt"];
   key?: CryptoKey;
 
   async generate(): Promise<void> {
     this.key = (await window.crypto.subtle.generateKey(
-      this.#algorithm,
+      this._algorithm,
       true,
-      this.#keyUsages
+      this._keyUsages
     )) as CryptoKey;
   }
 
@@ -27,12 +27,12 @@ export class KeyManager {
         k,
         alg: "A128GCM",
         ext: false,
-        key_ops: this.#keyUsages,
+        key_ops: this._keyUsages,
         kty: "oct",
       },
-      this.#algorithm,
+      this._algorithm,
       false,
-      this.#keyUsages
+      this._keyUsages
     );
   }
 }

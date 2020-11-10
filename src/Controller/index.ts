@@ -14,21 +14,21 @@ export interface ControllerConfig {
 }
 
 export class Controller {
-  #frame: Frame | null = null;
-  #keyManager: KeyManager;
-  #objectKey: string;
-  #persistence: Persistence;
-  #room: string;
-  #socket: Socket | null = null;
+  private _frame: Frame | null = null;
+  private _keyManager: KeyManager;
+  private _objectKey: string;
+  private _persistence: Persistence;
+  private _room: string;
+  private _socket: Socket | null = null;
   viewJs: View | null = null;
   viewHtml: View | null = null;
   viewCss: View | null = null;
 
   constructor(config: ControllerConfig) {
-    this.#keyManager = new KeyManager();
-    this.#persistence = config.persistence;
-    this.#room = this.getRoomFromWindow();
-    this.#objectKey = this.getObjectKeyFromWindow();
+    this._keyManager = new KeyManager();
+    this._persistence = config.persistence;
+    this._room = this.getRoomFromWindow();
+    this._objectKey = this.getObjectKeyFromWindow();
   }
 
   getRoomFromWindow() {
@@ -40,10 +40,10 @@ export class Controller {
   }
 
   async start() {
-    if (this.#room.length && this.#objectKey.length) {
-      await this.#keyManager.import(this.#objectKey);
+    if (this._room.length && this._objectKey.length) {
+      await this._keyManager.import(this._objectKey);
       this.setSocket();
-      (this.#socket as Socket).open();
+      (this._socket as Socket).open();
       this.registerSocketEvents();
     } else {
       this.useFrame();
@@ -53,13 +53,13 @@ export class Controller {
 
   async share() {
     // set key on window
-    await this.#keyManager.generate();
-    window.location.hash = "#key=" + (await this.#keyManager.export());
+    await this._keyManager.generate();
+    window.location.hash = "#key=" + (await this._keyManager.export());
     // set up socket
     this.setSocket();
-    (this.#socket as Socket).open();
+    (this._socket as Socket).open();
     this.registerSocketEvents();
-    (this.#socket as Socket).emit("sync", JSON.stringify(this.#persistence.js));
+    (this._socket as Socket).emit("sync", JSON.stringify(this._persistence.js));
     // TODO: avoid page refresh (and send current local storage to server)
     // set room on window
     const room = nanoid();
@@ -69,10 +69,10 @@ export class Controller {
   }
 
   setSocket() {
-    this.#socket = new Socket({
+    this._socket = new Socket({
       uri: (import.meta as any).env.SNOWPACK_PUBLIC_SOCKET_URI,
-      room: this.#room,
-      key: this.#keyManager.key as CryptoKey,
+      room: this._room,
+      key: this._keyManager.key as CryptoKey,
     });
   }
 
@@ -81,13 +81,13 @@ export class Controller {
     this.useFrame();
     this.useViews();
     ["Js", "Html", "Css"].forEach((value) => {
-      if (!this.#socket) return;
-      this.#socket.on(`init:${value.toLowerCase()}`, (doc: string[]) => {
+      if (!this._socket) return;
+      this._socket.on(`init:${value.toLowerCase()}`, (doc: string[]) => {
         console.debug("Controller:init");
         // @ts-ignore
-        this.#persistence[value.toLowerCase()] = doc ? doc.join("\n") : "";
+        this._persistence[value.toLowerCase()] = doc ? doc.join("\n") : "";
       });
-      this.#socket.on(`update:${value.toLowerCase()}`, (json: JSON) => {
+      this._socket.on(`update:${value.toLowerCase()}`, (json: JSON) => {
         console.debug("Controller:incoming");
         // @ts-ignore
         console.log(this["viewHtml"]);
@@ -101,10 +101,10 @@ export class Controller {
   }
 
   useFrame() {
-    this.#frame = new Frame({
-      js: this.#persistence.js,
-      html: this.#persistence.html,
-      css: this.#persistence.css,
+    this._frame = new Frame({
+      js: this._persistence.js,
+      html: this._persistence.html,
+      css: this._persistence.css,
       parent: document.querySelector("#frame") as Element,
     });
   }
@@ -112,60 +112,60 @@ export class Controller {
   useViews() {
     this.viewJs = new View({
       extensions: [javascript()],
-      initialState: this.#persistence.js,
+      initialState: this._persistence.js,
       outgoing: this.outgoingJs.bind(this),
       parent: document.querySelector("#view-js") as Element,
     });
     this.viewHtml = new View({
       extensions: [html()],
-      initialState: this.#persistence.html,
+      initialState: this._persistence.html,
       outgoing: this.outgoingHtml.bind(this),
       parent: document.querySelector("#view-html") as Element,
     });
     this.viewCss = new View({
       extensions: [css()],
-      initialState: this.#persistence.css,
+      initialState: this._persistence.css,
       outgoing: this.outgoingCss.bind(this),
       parent: document.querySelector("#view-css") as Element,
     });
   }
 
   outgoingJs(doc: string, transaction: Transaction, isSync: boolean = false) {
-    if (!this.#frame) return;
-    this.#frame.js = doc;
-    this.#persistence.js = doc;
-    if (!this.#socket || isSync) return;
+    if (!this._frame) return;
+    this._frame.js = doc;
+    this._persistence.js = doc;
+    if (!this._socket || isSync) return;
     console.debug("Controller:outgoing");
-    this.#socket.emit(
+    this._socket.emit(
       "update:js",
       JSON.stringify(transaction.changes.toJSON())
     );
-    this.#socket.emit("sync:js", JSON.stringify(doc));
+    this._socket.emit("sync:js", JSON.stringify(doc));
   }
 
   outgoingHtml(doc: string, transaction: Transaction, isSync: boolean = false) {
-    if (!this.#frame) return;
-    this.#frame.html = doc;
-    this.#persistence.html = doc;
-    if (!this.#socket || isSync) return;
+    if (!this._frame) return;
+    this._frame.html = doc;
+    this._persistence.html = doc;
+    if (!this._socket || isSync) return;
     console.debug("Controller:outgoing");
-    this.#socket.emit(
+    this._socket.emit(
       "update:html",
       JSON.stringify(transaction.changes.toJSON())
     );
-    this.#socket.emit("sync:html", JSON.stringify(doc));
+    this._socket.emit("sync:html", JSON.stringify(doc));
   }
 
   outgoingCss(doc: string, transaction: Transaction, isSync: boolean = false) {
-    if (!this.#frame) return;
-    this.#frame.css = doc;
-    this.#persistence.css = doc;
-    if (!this.#socket || isSync) return;
+    if (!this._frame) return;
+    this._frame.css = doc;
+    this._persistence.css = doc;
+    if (!this._socket || isSync) return;
     console.debug("Controller:outgoing");
-    this.#socket.emit(
+    this._socket.emit(
       "update:css",
       JSON.stringify(transaction.changes.toJSON())
     );
-    this.#socket.emit("sync:css", JSON.stringify(doc));
+    this._socket.emit("sync:css", JSON.stringify(doc));
   }
 }
