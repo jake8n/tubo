@@ -8,20 +8,20 @@ interface SocketConfig {
 }
 
 export class Socket {
-  #uri: string;
-  #room: string;
-  #key: CryptoKey;
+  private _uri: string;
+  private _room: string;
+  private _key: CryptoKey;
   client: SocketIOClient.Socket | null = null;
 
   constructor(config: SocketConfig) {
-    this.#uri = config.uri;
-    this.#room = config.room;
-    this.#key = config.key;
+    this._uri = config.uri;
+    this._room = config.room;
+    this._key = config.key;
   }
 
   open() {
     // @ts-ignore
-    this.client = io(this.#uri, { query: { room: this.#room } });
+    this.client = io(this._uri, { query: { room: this._room } });
   }
 
   isClientNull() {
@@ -35,7 +35,7 @@ export class Socket {
 
   async emit(event: string, content: string) {
     this.isClientNull();
-    const encrypted = await encrypt(this.#key, content);
+    const encrypted = await encrypt(this._key, content);
     this.client?.emit(event, encrypted);
   }
 
@@ -43,7 +43,7 @@ export class Socket {
     this.isClientNull();
     this.client?.on(event, async (content: ArrayBuffer) => {
       if (content) {
-        const decrypted = await decrypt(this.#key, content);
+        const decrypted = await decrypt(this._key, content);
         return callback(JSON.parse(decrypted));
       } else {
         return callback();

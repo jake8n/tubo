@@ -8,50 +8,46 @@ interface FrameConfig {
 }
 
 export class Frame {
-  #js: string;
-  #html: string;
-  #css: string;
-  #renderDebounced: Function;
+  private _js: string;
+  private _html: string;
+  private _css: string;
+  private _renderDebounced: Function;
   parent: Element;
 
   constructor(config: FrameConfig) {
-    this.#js = config.js;
-    this.#html = config.html;
-    this.#css = config.css;
-    this.#renderDebounced = debounce(this.render, 200);
+    this._js = config.js;
+    this._html = config.html;
+    this._css = config.css;
+    this._renderDebounced = debounce(this.render, 200);
     this.parent = config.parent;
     this.render();
   }
 
   set js(value: string) {
-    this.#js = value;
-    this.#renderDebounced();
-  }
-
-  get js() {
-    return this.#js;
+    this._js = value;
+    this._renderDebounced();
   }
 
   set html(value: string) {
-    this.#html = value;
-    this.#renderDebounced();
+    this._html = value;
+    this._renderDebounced();
   }
 
   set css(value: string) {
-    this.#css = value;
-    this.#renderDebounced();
+    this._css = value;
+    this._renderDebounced();
   }
 
   toHTML(): string {
     return `<head>
   <style>
-    ${this.#css}
+    ${this._css}
   </style>
 </head>
 <body>
-  ${this.#html}
+  ${this._html}
   <script type="module">
-    ${this.#js}
+    ${this._js}
   </script>
 </body>`;
   }
