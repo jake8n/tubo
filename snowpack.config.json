@@ -8,5 +8,8 @@
     "port": 3000,
     "secure": true
   },
-  "plugins": ["@snowpack/plugin-typescript"]
+  "plugins": ["@snowpack/plugin-typescript"],
+  "scripts": {
+    "build:css": "postcss"
+  }
 }
