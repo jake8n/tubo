@@ -1,4 +1,3 @@
-import "./index.css";
 import React, { Component, h } from "preact";
 import { Persistence } from "../../Persistence";
 import { javascript } from "@codemirror/next/lang-javascript";
