@@ -12,15 +12,14 @@ import {
   Extension as CodeMirrorExtension,
   Transaction,
 } from "@codemirror/next/state";
+import { Socket } from "../../Socket";
 
 interface Props {
+  extension: string;
   extensions: CodeMirrorExtension[];
   initialLocalState: string;
-  onOutgoing(
-    doc: string | undefined,
-    transaction: string,
-    isSync: boolean
-  ): void;
+  onOutgoing(doc: string | undefined): void;
+  socket: Socket;
 }
 
 export default class View extends Component<Props> {
@@ -36,6 +35,15 @@ export default class View extends Component<Props> {
 
   componentDidMount() {
     this.useView();
+    if (this.props.socket.client) {
+      this.props.socket.on("transaction", (transaction: string) => {
+        const {
+          extension,
+          changes,
+        }: { extension: string; changes: string } = JSON.parse(transaction);
+        if (extension === this.props.extension) this.incoming(changes);
+      });
+    }
   }
 
   componentWillUnmount() {
@@ -63,12 +71,19 @@ export default class View extends Component<Props> {
 
   dispatch(transaction: Transaction) {
     this.editor?.update([transaction]);
+    this.props.onOutgoing(this.editor?.state.doc.toString());
 
-    if (!transaction.changes.empty) {
-      this.props.onOutgoing(
-        this.editor?.state.doc.toString(),
-        JSON.stringify(transaction.changes.toJSON()),
-        !!transaction.annotation(this.syncAnnotation)
+    if (
+      !transaction.changes.empty &&
+      !transaction.annotation(this.syncAnnotation) &&
+      this.props.socket.client
+    ) {
+      this.props.socket.emit(
+        "transaction",
+        JSON.stringify({
+          extension: this.props.extension,
+          changes: JSON.stringify(transaction.changes.toJSON()),
+        })
       );
     }
   }
