@@ -1,53 +1,49 @@
 import io from "socket.io-client";
 import { decrypt, encrypt } from "../cryptography";
 
-interface SocketConfig {
-  uri: string;
-  room: string;
-  key: CryptoKey;
-}
-
 export class Socket {
   private _uri: string;
-  private _room: string;
-  private _key: CryptoKey;
+  private _key?: CryptoKey;
   client: SocketIOClient.Socket | null = null;
 
-  constructor(config: SocketConfig) {
-    this._uri = config.uri;
-    this._room = config.room;
-    this._key = config.key;
+  constructor(uri: string) {
+    this._uri = uri;
+  }
+
+  set key(key: CryptoKey) {
+    this._key = key;
   }
 
   open() {
-    // @ts-ignore
-    this.client = io(this._uri, { query: { room: this._room } });
-  }
-
-  isClientNull() {
-    if (!this.client) throw new Error("client is null");
+    this.client = io(this._uri);
   }
 
   close() {
-    this.isClientNull();
     this.client?.close();
   }
 
-  async emit(event: string, content: string) {
-    this.isClientNull();
-    const encrypted = await encrypt(this._key, content);
-    this.client?.emit(event, encrypted);
+  unsecureEmit(event: string, content: string) {
+    return this.client?.emit(event, content);
   }
 
-  on(event: string, callback: Function) {
-    this.isClientNull();
-    this.client?.on(event, async (content: ArrayBuffer) => {
-      if (content) {
-        const decrypted = await decrypt(this._key, content);
-        return callback(JSON.parse(decrypted));
+  async emit(event: string, content: string) {
+    if (!this._key) throw new Error("socket key not defined");
+    return this.client?.emit(event, await encrypt(this._key, content));
+  }
+
+  on(event: string, callback: Function, once: boolean = false) {
+    if (!this._key) throw new Error("socket key not defined");
+    const method = once ? "once" : "on";
+    this.client?.[method](event, async (value: ArrayBuffer | undefined) => {
+      if (value) {
+        return callback(await decrypt(this._key as CryptoKey, value));
       } else {
         return callback();
       }
     });
+  }
+
+  once(event: string, callback: Function) {
+    this.on(event, callback, true);
   }
 }

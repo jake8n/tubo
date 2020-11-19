@@ -1,4 +1,5 @@
 import React, { Component, h } from "preact";
+import { Ref, useRef } from "preact/hooks";
 import {
   basicSetup,
   EditorState,
@@ -8,15 +9,18 @@ import {
   Annotation,
   AnnotationType,
   ChangeSet,
-  Extension,
+  Extension as CodeMirrorExtension,
   Transaction,
 } from "@codemirror/next/state";
-import { Ref, useRef } from "preact/hooks";
 
 interface Props {
-  extensions: Extension[];
-  initialState: string;
-  onOutgoing: Function;
+  extensions: CodeMirrorExtension[];
+  initialLocalState: string;
+  onOutgoing(
+    doc: string | undefined,
+    transaction: string,
+    isSync: boolean
+  ): void;
 }
 
 export default class View extends Component<Props> {
@@ -31,8 +35,23 @@ export default class View extends Component<Props> {
   }
 
   componentDidMount() {
+    this.useView();
+  }
+
+  componentWillUnmount() {
+    this.editor?.destroy();
+  }
+
+  incoming(changes: string) {
+    this.editor?.dispatch({
+      changes: ChangeSet.fromJSON(JSON.parse(changes)),
+      annotations: this.syncAnnotation.of(true),
+    });
+  }
+
+  useView() {
     const state = EditorState.create({
-      doc: this.props.initialState,
+      doc: this.props.initialLocalState,
       extensions: [basicSetup, ...(this.props.extensions || [])],
     });
     this.editor = new EditorView({
@@ -44,11 +63,12 @@ export default class View extends Component<Props> {
 
   dispatch(transaction: Transaction) {
     this.editor?.update([transaction]);
+
     if (!transaction.changes.empty) {
       this.props.onOutgoing(
         this.editor?.state.doc.toString(),
-        transaction,
-        transaction.annotation(this.syncAnnotation)
+        JSON.stringify(transaction.changes.toJSON()),
+        !!transaction.annotation(this.syncAnnotation)
       );
     }
   }
