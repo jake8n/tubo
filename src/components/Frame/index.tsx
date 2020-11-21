@@ -1,58 +1,42 @@
-import debounce from "lodash.debounce";
-import React, { Component, h } from "preact";
-import { Ref, useRef } from "preact/hooks";
+import React, { h } from "preact";
+import { Ref, useEffect, useRef } from "preact/hooks";
 
-interface Props {
+export default function ({
+  js,
+  html,
+  css,
+}: {
   js: string;
   html: string;
   css: string;
+}) {
+  const ref: Ref<HTMLDivElement> = useRef();
+  // TODO: debounce
+  useEffect(() => {
+    const iframe = document.createElement("iframe");
+    ref.current.appendChild(iframe);
+    iframe.contentWindow?.document.open();
+    iframe.contentWindow?.document.write(toHTML(js, html, css));
+    iframe.contentWindow?.document.close();
+
+    return () => {
+      while (ref.current.lastChild) {
+        ref.current.removeChild(ref.current.lastChild);
+      }
+    };
+  });
+
+  return <div ref={ref} />;
 }
 
-export default class Frame extends Component<Props> {
-  ref: Ref<HTMLDivElement>;
-  useIframeDebounced: Function;
-
-  constructor(props: Props) {
-    super(props);
-    this.ref = useRef();
-    this.useIframeDebounced = debounce(this.useIframe, 200);
-  }
-
-  componentDidMount() {
-    this.useIframe();
-  }
-
-  shouldComponentUpdate(): boolean {
-    this.useIframeDebounced();
-    return true;
-  }
-
-  useIframe() {
-    while (this.ref.current.lastChild) {
-      this.ref.current.removeChild(this.ref.current.lastChild);
-    }
-    const iframe = document.createElement("iframe");
-    this.ref.current.appendChild(iframe);
-    iframe.contentWindow?.document.open();
-    iframe.contentWindow?.document.write(this.toHTML());
-    iframe.contentWindow?.document.close();
-  }
-
-  toHTML() {
-    return `<head>
+const toHTML = (js: string, html: string, css: string) => `<head>
   <style>
-    ${this.props.css}
+    ${css}
   </style>
 </head>
 <body>
-  ${this.props.html}
+  ${html}
   <script type="module">
-    ${this.props.js}
+    ${js}
   </script>
 </body>`;
-  }
-
-  render() {
-    return <div ref={this.ref} />;
-  }
-}

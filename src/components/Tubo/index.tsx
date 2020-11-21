@@ -1,4 +1,4 @@
-import React, { Component, h } from "preact";
+import React, { h } from "preact";
 import { nanoid } from "nanoid";
 import { javascript } from "@codemirror/next/lang-javascript";
 import { html } from "@codemirror/next/lang-html";
@@ -8,144 +8,95 @@ import { Socket } from "../../Socket";
 import Frame from "../Frame";
 import View from "../View";
 import { Extension as CodeMirrorExtension } from "@codemirror/next/state";
+import { useState } from "preact/hooks";
 
 type Extension = "js" | "html" | "css";
 interface ViewConfig {
   extension: Extension;
   extensions: CodeMirrorExtension[];
 }
-interface Props {}
-interface State {
-  isUsingSocket: boolean;
-  isSocketReady: boolean;
-  js: string;
-  html: string;
-  css: string;
-}
 
-export default class Tubo extends Component<Props, State> {
-  keyManager: KeyManager;
-  objectKey: string;
-  room: string;
-  socket: Socket;
-  views: ViewConfig[] = [
-    {
-      extension: "js",
-      extensions: [javascript()],
-    },
-    {
-      extension: "html",
-      extensions: [html()],
-    },
-    {
-      extension: "css",
-      extensions: [css()],
-    },
-  ];
+const views: ViewConfig[] = [
+  {
+    extension: "js",
+    extensions: [javascript()],
+  },
+  {
+    extension: "html",
+    extensions: [html()],
+  },
+  {
+    extension: "css",
+    extensions: [css()],
+  },
+];
 
-  constructor() {
-    super();
-    const [room, objectKey] = window.location.hash.slice(1).split(",");
-    this.keyManager = new KeyManager();
-    this.objectKey = objectKey;
-    this.room = room;
-    this.socket = new Socket(
-      (import.meta as any).env.SNOWPACK_PUBLIC_SOCKET_URI
+export default function () {
+  const keyManager = new KeyManager();
+  const socket = new Socket(
+    (import.meta as any).env.SNOWPACK_PUBLIC_SOCKET_URI
+  );
+  const [files, setFiles] = useState({ js: "", html: "", css: "" });
+  const [isUsingSocket, setIsUsingSocket] = useState(false);
+  const [isSocketReady, setIsSocketReady] = useState(false);
+  const [initialRoom, initialObjectKey] = window.location.hash
+    .slice(1)
+    .split(",");
+  const [room, setRoom] = useState(initialRoom);
+  const [objectKey, setObjectKey] = useState(initialObjectKey);
+
+  const initialiseSocket = async () => {
+    await keyManager.import(objectKey);
+    socket.key = keyManager.key as CryptoKey;
+    socket.open();
+    socket.once("room-created", () => setIsSocketReady(true));
+    socket.once("room-joined", (filesAsString: string) => {
+      setFiles(JSON.parse(filesAsString));
+      setIsSocketReady(true);
+    });
+    socket.on("request-for-state", () =>
+      socket.emit("response-for-state", JSON.stringify(files))
     );
+    socket.unsecureEmit("join-room", room);
+  };
 
-    if (this.room.length && this.objectKey.length) {
-      this.state = {
-        isUsingSocket: true,
-        isSocketReady: false,
-        js: "",
-        html: "",
-        css: "",
-      };
-      this.useSocket();
-    } else {
-      this.state = {
-        isUsingSocket: false,
-        isSocketReady: false,
-        js: "",
-        html: "",
-        css: "",
-      };
-    }
+  const onShare = async () => {
+    setIsUsingSocket(true);
+    setRoom(nanoid());
+    await keyManager.generate();
+    setObjectKey(await keyManager.export());
+    console.log({ room, objectKey });
+    history.replaceState(null, "", `#${room},${objectKey}`);
+    await initialiseSocket();
+  };
+
+  if (room.length && objectKey.length) {
+    setIsUsingSocket(true);
+    initialiseSocket();
   }
 
-  async onShare() {
-    this.room = nanoid();
-    await this.keyManager.generate();
-    this.objectKey = await this.keyManager.export();
-    history.replaceState(null, "", `#${this.room},${this.objectKey}`);
-    await this.useSocket();
-  }
+  const onOutgoingGenerator = (extension: Extension) => (doc: string) =>
+    setFiles({ ...files, [extension]: doc });
 
-  async useSocket() {
-    this.setState({
-      isUsingSocket: true,
-    });
-    await this.keyManager.import(this.objectKey);
-    this.socket.key = this.keyManager.key as CryptoKey;
-    this.socket.open();
-    this.socket.once("room-created", () => {
-      this.setState({
-        isSocketReady: true,
-      });
-    });
-    this.socket.once("room-joined", (state: string) => {
-      const { html, css, js } = JSON.parse(state);
-      this.setState({
-        js,
-        html,
-        css,
-        isSocketReady: true,
-      });
-    });
-    this.socket.on("request-for-state", () => {
-      this.socket.emit("response-for-state", JSON.stringify(this.state));
-    });
-    this.socket.unsecureEmit("join-room", this.room);
-  }
-
-  onOutgoingGenerator(extension: Extension) {
-    return (doc: string) => {
-      this.setState({
-        [extension]: doc,
-      });
-    };
-  }
-
-  render(
-    {},
-    state: {
-      js: string;
-      html: string;
-      css: string;
-      isUsingSocket: boolean;
-      isSocketReady: boolean;
-    }
-  ) {
-    if (state.isUsingSocket === state.isSocketReady) {
-      return (
-        <div>
-          <button onClick={this.onShare.bind(this)}>Share</button>
-          <div class="flex">
-            {this.views.map(({ extension, extensions }) => (
-              <View
-                extension={extension}
-                extensions={extensions}
-                initialLocalState={state[extension]}
-                onOutgoing={this.onOutgoingGenerator(extension)}
-                socket={this.socket}
-              />
-            ))}
-          </div>
-          <Frame js={state.js} html={state.html} css={state.css} />
+  if (isUsingSocket === isSocketReady) {
+    return (
+      <div>
+        {!socket.client && <button onClick={onShare}>Share</button>}
+        <div class="flex">
+          {views.map(({ extension, extensions }) => (
+            <View
+              extension={extension}
+              extensions={extensions}
+              initialLocalState={files[extension]}
+              onOutgoing={onOutgoingGenerator(extension)}
+              socket={socket}
+            />
+          ))}
         </div>
-      );
-    } else {
-      return <div>Loading...</div>;
-    }
+        <Frame {...files} />
+      </div>
+    );
+  } else {
+    return <div>Loading...</div>;
   }
 }
