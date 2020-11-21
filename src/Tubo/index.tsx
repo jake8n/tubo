@@ -54,10 +54,13 @@ export default function () {
     socket.key = keyManager.key as CryptoKey;
     socket.open();
     socket.once("room-created", () => setIsSocketReady(true));
-    socket.once("room-joined", (filesAsString: string) => {
-      setFiles(JSON.parse(filesAsString));
+    socket.once("room-joined", (state: string) => {
+      const { activeTab, files } = JSON.parse(state);
+      setActiveTab(activeTab);
+      setFiles(files);
       setIsSocketReady(true);
     });
+    socket.on("set-active-tab", (id: string) => setActiveTab(id));
     socket.unsecureEmit("join-room", room);
   };
 
@@ -88,7 +91,13 @@ export default function () {
     if (!isSocketReady) return;
 
     const responseForState = () =>
-      socket.emit("response-for-state", JSON.stringify(files));
+      socket.emit(
+        "response-for-state",
+        JSON.stringify({
+          activeTab,
+          files,
+        })
+      );
     socket.on("request-for-state", responseForState);
 
     return () => socket.off("request-for-state");
@@ -97,6 +106,11 @@ export default function () {
   const onOutgoingGenerator = (extension: Extension) => (doc: string) => {
     persistence[extension] = doc;
     setFiles({ ...files, [extension]: doc });
+  };
+
+  const onChangeTab = (id: string) => {
+    setActiveTab(id);
+    socket?.emit("set-active-tab", id);
   };
 
   if (isUsingSocket === isSocketReady) {
@@ -111,7 +125,9 @@ export default function () {
               Share
             </button>
           )}
-          {isUsingSocket && <p>Connected 🟢</p>}
+          {isUsingSocket && (
+            <p class="text-white font-semibold">Connected 👍</p>
+          )}
         </aside>
 
         <main class="flex flex-1">
@@ -120,7 +136,7 @@ export default function () {
               names={["script.js", "index.html", "main.css"]}
               ids={views.map((view) => view.extension)}
               active={activeTab}
-              onChange={(id: string) => setActiveTab(id)}
+              onChange={onChangeTab}
             />
             {views.map(({ extension, extensions }) => (
               <TabContent active={extension === activeTab}>
