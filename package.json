@@ -1,6 +1,6 @@
 {
   "name": "tubo",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "scripts": {
     "build": "snowpack build",
     "dev": "SNOWPACK_PUBLIC_SOCKET_URI=\"ws://localhost:7000\"/ snowpack dev",
