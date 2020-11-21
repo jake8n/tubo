@@ -28,6 +28,7 @@ export class Socket {
 
   async emit(event: string, content: string) {
     if (!this._key) throw new Error("socket key not defined");
+    console.debug(`socket::emit::${event}`, content);
     return this.client?.emit(event, await encrypt(this._key, content));
   }
 
@@ -35,6 +36,7 @@ export class Socket {
     if (!this._key) throw new Error("socket key not defined");
     const method = once ? "once" : "on";
     this.client?.[method](event, async (value: ArrayBuffer | undefined) => {
+      console.debug(`socket::on::${event}`);
       if (value) {
         return callback(await decrypt(this._key as CryptoKey, value));
       } else {
@@ -45,5 +47,9 @@ export class Socket {
 
   once(event: string, callback: Function) {
     this.on(event, callback, true);
+  }
+
+  off(event: string, callback?: Function) {
+    this.client?.off(event, callback);
   }
 }
