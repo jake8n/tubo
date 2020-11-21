@@ -1,6 +1,6 @@
 import "./index.css";
 import React, { h, render } from "preact";
-import Tubo from "./components/Tubo";
+import Tubo from "./Tubo";
 
 (async () => {
   try {
