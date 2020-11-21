@@ -1,7 +1,8 @@
+import debounce from "lodash.debounce";
 import React, { h } from "preact";
 import { Ref, useEffect, useRef } from "preact/hooks";
 
-export default function ({
+export default function Frame({
   js,
   html,
   css,
@@ -11,23 +12,39 @@ export default function ({
   css: string;
 }) {
   const ref: Ref<HTMLDivElement> = useRef();
-  // TODO: debounce
-  useEffect(() => {
-    const iframe = document.createElement("iframe");
-    ref.current.appendChild(iframe);
-    iframe.contentWindow?.document.open();
-    iframe.contentWindow?.document.write(toHTML(js, html, css));
-    iframe.contentWindow?.document.close();
 
-    return () => {
-      while (ref.current.lastChild) {
-        ref.current.removeChild(ref.current.lastChild);
-      }
-    };
-  });
+  // render immediately on mount
+  useEffect(() => {
+    renderIframe(ref.current, toHTML(js, html, css));
+    return () => removeChildren(ref.current);
+  }, []);
+
+  // debounce render when contents update
+  useEffect(
+    (...args: any[]) => {
+      renderDebounced(ref.current, toHTML(js, html, css));
+    },
+    [js, html, css]
+  );
 
   return <div ref={ref} />;
 }
+
+const renderIframe = (parent: HTMLElement, content: string) => {
+  const iframe = document.createElement("iframe");
+  parent.appendChild(iframe);
+  iframe.contentWindow?.document.open();
+  iframe.contentWindow?.document.write(content);
+  iframe.contentWindow?.document.close();
+};
+const renderDebounced = debounce((parent: HTMLElement, content: string) => {
+  removeChildren(parent);
+  renderIframe(parent, content);
+}, 500);
+
+const removeChildren = (parent: HTMLElement) => {
+  while (parent.lastChild) parent.removeChild(parent.lastChild);
+};
 
 const toHTML = (js: string, html: string, css: string) => `<head>
   <style>
