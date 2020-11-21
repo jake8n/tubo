@@ -12,7 +12,7 @@ import {
   Extension as CodeMirrorExtension,
   Transaction,
 } from "@codemirror/next/state";
-import { Socket } from "../../Socket";
+import { Socket } from "../Socket";
 
 interface Props {
   extension: string;
