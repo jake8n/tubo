@@ -9,14 +9,15 @@ import Frame from "../Frame";
 import View from "../View";
 import { Extension as CodeMirrorExtension } from "@codemirror/next/state";
 import { useState, useEffect } from "preact/hooks";
+import { Persistence } from "../Persistence";
+import { TabContent, Tabs } from "../Tab";
 
+const persistence = new Persistence();
 type Extension = "js" | "html" | "css";
-interface ViewConfig {
+const views: {
   extension: Extension;
   extensions: CodeMirrorExtension[];
-}
-
-const views: ViewConfig[] = [
+}[] = [
   {
     extension: "js",
     extensions: [javascript()],
@@ -37,13 +38,14 @@ export default function () {
     new Socket((import.meta as any).env.SNOWPACK_PUBLIC_SOCKET_URI)
   );
   const [files, setFiles] = useState({
-    js: "// script.js",
-    html: "<!-- index.html -->",
-    css: "/* main.css */",
+    js: persistence.js,
+    html: persistence.html,
+    css: persistence.css,
   });
   const [isUsingSocket, setIsUsingSocket] = useState(false);
   const [isSocketReady, setIsSocketReady] = useState(false);
   const [roomKeyPair, setRoomKeyPair] = useState(getRoomKeyPairFromURL());
+  const [activeTab, setActiveTab] = useState("js");
 
   const initialiseSocket = async () => {
     setIsUsingSocket(true);
@@ -92,25 +94,51 @@ export default function () {
     return () => socket.off("request-for-state");
   }, [isSocketReady, files]);
 
-  const onOutgoingGenerator = (extension: Extension) => (doc: string) =>
+  const onOutgoingGenerator = (extension: Extension) => (doc: string) => {
+    persistence[extension] = doc;
     setFiles({ ...files, [extension]: doc });
+  };
 
   if (isUsingSocket === isSocketReady) {
     return (
-      <div>
-        {!isUsingSocket && <button onClick={onShare}>Share</button>}
-        <div class="flex">
-          {views.map(({ extension, extensions }) => (
-            <View
-              extension={extension}
-              extensions={extensions}
-              initialLocalState={files[extension]}
-              onOutgoing={onOutgoingGenerator(extension)}
-              socket={socket}
+      <div class="h-screen flex">
+        <aside class="bg-blue-500 flex flex-col items-center p-4">
+          {!isUsingSocket && (
+            <button
+              onClick={onShare}
+              class="py-2 px-4 bg-pink-400 text-white font-semibold rounded-lg shadow-md"
+            >
+              Share
+            </button>
+          )}
+          {isUsingSocket && <p>Connected 🟢</p>}
+        </aside>
+
+        <main class="flex flex-1">
+          <div class="bg-gray-200 flex flex-col flex-1 p-8 overflow-y-auto">
+            <Tabs
+              names={["script.js", "index.html", "main.css"]}
+              ids={views.map((view) => view.extension)}
+              active={activeTab}
+              onChange={(id) => setActiveTab(id)}
             />
-          ))}
-        </div>
-        <Frame {...files} />
+            {views.map(({ extension, extensions }) => (
+              <TabContent active={extension === activeTab}>
+                <View
+                  extension={extension}
+                  extensions={extensions}
+                  initialLocalState={files[extension]}
+                  onOutgoing={onOutgoingGenerator(extension)}
+                  socket={socket}
+                />
+              </TabContent>
+            ))}
+          </div>
+
+          <div class="flex-1">
+            <Frame {...files} />
+          </div>
+        </main>
       </div>
     );
   } else {

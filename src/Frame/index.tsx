@@ -27,7 +27,7 @@ export default function Frame({
     [js, html, css]
   );
 
-  return <div ref={ref} />;
+  return <div ref={ref} class="h-full" />;
 }
 
 const renderIframe = (parent: HTMLElement, content: string) => {

@@ -89,6 +89,6 @@ export default class View extends Component<Props> {
   }
 
   render() {
-    return <div ref={this.ref} class="flex-1" />;
+    return <div ref={this.ref} class="bg-white h-full overflow-x-auto" />;
   }
 }
