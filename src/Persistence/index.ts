@@ -1,10 +1,6 @@
 export class Persistence {
   get js(): string {
-    return (
-      localStorage.getItem("js") ||
-      `// script.js
-console.log('hello from iframe')`
-    );
+    return localStorage.getItem("js") || "// script.js";
   }
 
   set js(value: string) {
