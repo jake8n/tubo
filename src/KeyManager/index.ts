@@ -12,12 +12,9 @@ export class KeyManager {
   }
 
   async export(): Promise<string> {
-    if (this.key) {
-      const { k } = await window.crypto.subtle.exportKey("jwk", this.key);
-      return k as string;
-    } else {
-      throw new Error("key is undefined");
-    }
+    if (!this.key) throw new Error("key is undefined");
+    const { k } = await window.crypto.subtle.exportKey("jwk", this.key);
+    return k as string;
   }
 
   async import(k: string): Promise<void> {
