@@ -115,12 +115,12 @@ export default function () {
         </aside>
 
         <main class="flex flex-1">
-          <div class="bg-gray-200 flex flex-col flex-1 p-8 overflow-y-auto">
+          <div class="bg-gray-200 flex flex-col flex-1 overflow-y-auto">
             <Tabs
               names={["script.js", "index.html", "main.css"]}
               ids={views.map((view) => view.extension)}
               active={activeTab}
-              onChange={(id) => setActiveTab(id)}
+              onChange={(id: string) => setActiveTab(id)}
             />
             {views.map(({ extension, extensions }) => (
               <TabContent active={extension === activeTab}>
