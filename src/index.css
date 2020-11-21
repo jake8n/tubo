@@ -16,4 +16,5 @@ iframe {
 .cm-wrap {
   font-family: "Roboto Mono", monospace !important;
   font-size: 1.5rem;
+  height: 100%;
 }

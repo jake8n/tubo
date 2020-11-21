@@ -14,7 +14,10 @@ export function Tabs({
   return (
     <div class="flex">
       {names.map((name, i) => (
-        <button class="bg-white px-4 py-2" onClick={() => onChange(ids[i])}>
+        <button
+          class={"px-4 py-2" + (active === ids[i] ? " bg-white" : "")}
+          onClick={() => onChange(ids[i])}
+        >
           {name}
         </button>
       ))}
@@ -29,6 +32,6 @@ export function TabContent({
   active: boolean;
   children: any;
 }) {
-  if (active) return <div>{children}</div>;
+  if (active) return <div class="flex-1">{children}</div>;
   else return null;
 }
