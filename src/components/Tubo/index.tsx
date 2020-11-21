@@ -90,7 +90,7 @@ export default function () {
     socket.on("request-for-state", responseForState);
 
     return () => socket.off("request-for-state");
-  }, [files]);
+  }, [isSocketReady, files]);
 
   const onOutgoingGenerator = (extension: Extension) => (doc: string) =>
     setFiles({ ...files, [extension]: doc });

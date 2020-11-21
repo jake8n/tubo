@@ -35,6 +35,7 @@ export class Socket {
   on(event: string, callback: Function, once: boolean = false) {
     if (!this._key) throw new Error("socket key not defined");
     const method = once ? "once" : "on";
+    console.debug(`socket::register::${method}::${event}`);
     this.client?.[method](event, async (value: ArrayBuffer | undefined) => {
       console.debug(`socket::on::${event}`);
       if (value) {
