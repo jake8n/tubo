@@ -8,7 +8,7 @@ import { Socket } from "../../Socket";
 import Frame from "../Frame";
 import View from "../View";
 import { Extension as CodeMirrorExtension } from "@codemirror/next/state";
-import { useState } from "preact/hooks";
+import { useState, useEffect } from "preact/hooks";
 
 type Extension = "js" | "html" | "css";
 interface ViewConfig {
@@ -32,21 +32,23 @@ const views: ViewConfig[] = [
 ];
 
 export default function () {
-  const keyManager = new KeyManager();
-  const socket = new Socket(
-    (import.meta as any).env.SNOWPACK_PUBLIC_SOCKET_URI
+  const [keyManager] = useState(new KeyManager());
+  const [socket] = useState(
+    new Socket((import.meta as any).env.SNOWPACK_PUBLIC_SOCKET_URI)
   );
-  const [files, setFiles] = useState({ js: "", html: "", css: "" });
+  const [files, setFiles] = useState({
+    js: "// script.js",
+    html: "<!-- index.html -->",
+    css: "/* main.css */",
+  });
   const [isUsingSocket, setIsUsingSocket] = useState(false);
   const [isSocketReady, setIsSocketReady] = useState(false);
-  const [initialRoom, initialObjectKey] = window.location.hash
-    .slice(1)
-    .split(",");
-  const [room, setRoom] = useState(initialRoom);
-  const [objectKey, setObjectKey] = useState(initialObjectKey);
+  const [roomKeyPair, setRoomKeyPair] = useState(getRoomKeyPairFromURL());
 
   const initialiseSocket = async () => {
-    await keyManager.import(objectKey);
+    setIsUsingSocket(true);
+    const [room, key] = roomKeyPair;
+    await keyManager.import(key);
     socket.key = keyManager.key as CryptoKey;
     socket.open();
     socket.once("room-created", () => setIsSocketReady(true));
@@ -54,26 +56,41 @@ export default function () {
       setFiles(JSON.parse(filesAsString));
       setIsSocketReady(true);
     });
-    socket.on("request-for-state", () =>
-      socket.emit("response-for-state", JSON.stringify(files))
-    );
     socket.unsecureEmit("join-room", room);
   };
 
   const onShare = async () => {
-    setIsUsingSocket(true);
-    setRoom(nanoid());
     await keyManager.generate();
-    setObjectKey(await keyManager.export());
-    console.log({ room, objectKey });
-    history.replaceState(null, "", `#${room},${objectKey}`);
-    await initialiseSocket();
+    setRoomKeyPair([nanoid(), await keyManager.export()]);
   };
 
-  if (room.length && objectKey.length) {
-    setIsUsingSocket(true);
-    initialiseSocket();
-  }
+  useEffect(() => {
+    const [room, key] = roomKeyPair;
+    // when first initialised there may not be a room key pair in URL
+    if (!room.length) return;
+
+    initialiseSocket().then(() => {
+      const [urlRoom, urlKey] = getRoomKeyPairFromURL();
+      if (room === urlRoom && key === urlKey) return;
+
+      history.replaceState(null, "", `#${room},${key}`);
+
+      // if (window.confirm('Share this unique URL and enjoy e2e encyrpted coding. Clicking OK copies it to your clipboard.')) {
+      // TODO: copy to clipboard
+      // }
+    });
+  }, [roomKeyPair]);
+
+  // re register to ensure files has latest state
+  useEffect(() => {
+    if (!isSocketReady) return;
+
+    const responseForState = () =>
+      socket.emit("response-for-state", JSON.stringify(files));
+    socket.on("request-for-state", responseForState);
+
+    return () => socket.off("request-for-state");
+  }, [files]);
 
   const onOutgoingGenerator = (extension: Extension) => (doc: string) =>
     setFiles({ ...files, [extension]: doc });
@@ -81,7 +98,7 @@ export default function () {
   if (isUsingSocket === isSocketReady) {
     return (
       <div>
-        {!socket.client && <button onClick={onShare}>Share</button>}
+        {!isUsingSocket && <button onClick={onShare}>Share</button>}
         <div class="flex">
           {views.map(({ extension, extensions }) => (
             <View
@@ -100,3 +117,5 @@ export default function () {
     return <div>Loading...</div>;
   }
 }
+
+const getRoomKeyPairFromURL = () => window.location.hash.slice(1).split(",");
