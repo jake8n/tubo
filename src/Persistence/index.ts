@@ -7,17 +7,17 @@ export interface File {
 const initialFiles: File[] = [
   {
     path: "index.html",
-    doc: "<!-- index.html -->",
+    doc: "<!-- index.html -->\n",
     lang: "html",
   },
   {
     path: "entry.js",
-    doc: "// entry.js",
+    doc: "// entry.js\n",
     lang: "javascript",
   },
   {
     path: "main.css",
-    doc: "/* main.css */",
+    doc: "/* main.css */\n",
     lang: "css",
   },
 ];
