@@ -12,7 +12,7 @@ import { IconRadio } from "../Icons";
 
 const persistence = new Persistence();
 
-export default function () {
+export default function Tubo() {
   const [keyManager] = useState(new KeyManager());
   const [socket] = useState(
     new Socket((import.meta as any).env.SNOWPACK_PUBLIC_SOCKET_URI)
@@ -97,7 +97,22 @@ export default function () {
   const onChangeTab = (id: string) => {
     persistence.activeTab = id;
     setActiveTab(id);
-    socket?.emit("set-active-tab", id);
+    if (socket.client) socket.emit("set-active-tab", id);
+  };
+
+  const onNewTab = () => {
+    const path = prompt("Please enter a file name", "helpers.js");
+    // TODO: regex to see if file matches .js, otherwise throw error
+    if (!path) return;
+    const nextFiles = files.concat({
+      path: path,
+      doc: `// ${path}`,
+      lang: "javascript",
+    });
+    persistence.files = nextFiles;
+    setFiles(nextFiles);
+    persistence.activeTab = path;
+    setActiveTab(path);
   };
 
   if (isUsingSocket === isSocketReady) {
@@ -118,10 +133,10 @@ export default function () {
         <main class="flex flex-col lg:flex-row flex-1">
           <div class="bg-gray-200 flex flex-col flex-1 overflow-y-auto">
             <Tabs
-              names={files.map((file) => file.path)}
-              ids={files.map((file) => file.path)}
+              paths={files.map((file) => file.path)}
               active={activeTab}
               onChange={onChangeTab}
+              onNew={onNewTab}
             />
             {files.map((file) => (
               <TabContent active={file.path === activeTab}>
