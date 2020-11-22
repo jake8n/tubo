@@ -11,8 +11,8 @@ const initialFiles: File[] = [
     lang: "html",
   },
   {
-    path: "script.js",
-    doc: "// script.js",
+    path: "entry.js",
+    doc: "// entry.js",
     lang: "javascript",
   },
   {

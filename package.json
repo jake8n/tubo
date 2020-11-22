@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@codemirror/next": "^0.13.1",
+    "es-module-lexer": "^0.3.26",
     "lodash.debounce": "^4.0.8",
     "nanoid": "^3.1.16",
     "preact": "^10.5.5",
