@@ -29,7 +29,7 @@ console.log(message)
     path: "helpers.js",
     doc: `// helpers.js
 
-export const message = "Hello from helpers.js!"
+export const message = "This message was imported by entry.js"
 `,
     lang: "javascript",
   },
