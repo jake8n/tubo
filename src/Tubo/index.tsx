@@ -106,13 +106,13 @@ export default function Tubo() {
 
   const onNewTab = () => {
     const path = prompt("Please enter a file name", "helpers.js");
-    // TODO: if name already exists
-    // TODO: max length
     if (!path) return;
     if (!path.match(/[A-Za-z0-9-_]+\.js/g))
       return alert(
-        'Files must have a ".js" extension and include only "-" or "_" as special characters.'
+        'Files must have a ".js" extension and can include only "-" or "_" as special characters.'
       );
+    if (files.find((file) => file.path === path))
+      return alert("File already exists 😢");
     createNewFile(path);
     if (socket.client) socket.emit("new-file", path);
   };
