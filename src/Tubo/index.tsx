@@ -36,7 +36,11 @@ export default function Tubo() {
       setFiles(files);
       setIsSocketReady(true);
     });
-    socket.on("set-active-tab", (id: string) => setActiveTab(id));
+    socket.on("set-active-tab", (id: string) => {
+      persistence.activeTab = id;
+      setActiveTab(id);
+    });
+    socket.on("new-file", (path: string) => createNewFile(path));
     socket.unsecureEmit("join-room", room);
   };
 
@@ -103,10 +107,15 @@ export default function Tubo() {
   const onNewTab = () => {
     const path = prompt("Please enter a file name", "helpers.js");
     if (!path) return;
-    if (!path.match(/[A-Za-z-_]+\.js/g))
+    if (!path.match(/[A-Za-z0-9-_]+\.js/g))
       return alert(
         'Files must have a ".js" extension and include only "-" or "_" as special characters.'
       );
+    createNewFile(path);
+    if (socket.client) socket.emit("new-file", path);
+  };
+
+  const createNewFile = (path: string) => {
     const nextFiles = files.concat({
       path: path,
       doc: `// ${path}`,
