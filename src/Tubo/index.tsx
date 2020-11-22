@@ -102,8 +102,11 @@ export default function Tubo() {
 
   const onNewTab = () => {
     const path = prompt("Please enter a file name", "helpers.js");
-    // TODO: regex to see if file matches .js, otherwise throw error
     if (!path) return;
+    if (!path.match(/[A-Za-z-_]+\.js/g))
+      return alert(
+        'Files must have a ".js" extension and include only "-" or "_" as special characters.'
+      );
     const nextFiles = files.concat({
       path: path,
       doc: `// ${path}`,
