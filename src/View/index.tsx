@@ -12,15 +12,29 @@ import {
   Extension as CodeMirrorExtension,
   Transaction,
 } from "@codemirror/next/state";
+import { html } from "@codemirror/next/lang-html";
+import { javascript } from "@codemirror/next/lang-javascript";
+import { css } from "@codemirror/next/lang-css";
 import { Socket } from "../Socket";
 
 interface Props {
-  extension: string;
-  extensions: CodeMirrorExtension[];
-  initialLocalState: string;
+  path: string;
+  lang: "html" | "javascript" | "css";
+  doc: string;
   onOutgoing(doc: string | undefined): void;
   socket: Socket;
 }
+
+interface TransactionEvent {
+  path: string;
+  changes: string;
+}
+
+const langExtensionMap = {
+  html,
+  javascript,
+  css,
+};
 
 export default class View extends Component<Props> {
   editor?: EditorView;
@@ -37,11 +51,8 @@ export default class View extends Component<Props> {
     this.useView();
     if (this.props.socket.client) {
       this.props.socket.on("transaction", (transaction: string) => {
-        const {
-          extension,
-          changes,
-        }: { extension: string; changes: string } = JSON.parse(transaction);
-        if (extension === this.props.extension) this.incoming(changes);
+        const { path, changes }: TransactionEvent = JSON.parse(transaction);
+        if ((this.props.path = path)) this.incoming(changes);
       });
     }
   }
@@ -59,8 +70,8 @@ export default class View extends Component<Props> {
 
   useView() {
     const state = EditorState.create({
-      doc: this.props.initialLocalState,
-      extensions: [basicSetup, ...(this.props.extensions || [])],
+      doc: this.props.doc,
+      extensions: [basicSetup, langExtensionMap[this.props.lang]()],
     });
     this.editor = new EditorView({
       state,
@@ -71,7 +82,10 @@ export default class View extends Component<Props> {
 
   dispatch(transaction: Transaction) {
     this.editor?.update([transaction]);
-    this.props.onOutgoing(this.editor?.state.doc.toString());
+
+    if (!transaction.changes.empty) {
+      this.props.onOutgoing(this.editor?.state.doc.toString());
+    }
 
     if (
       !transaction.changes.empty &&
@@ -81,9 +95,9 @@ export default class View extends Component<Props> {
       this.props.socket.emit(
         "transaction",
         JSON.stringify({
-          extension: this.props.extension,
+          path: this.props.path,
           changes: JSON.stringify(transaction.changes.toJSON()),
-        })
+        } as TransactionEvent)
       );
     }
   }
