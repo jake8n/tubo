@@ -29,27 +29,43 @@ const getContent = (files: File[]): string => {
   const scripts = files.filter((file) => file.lang === "javascript");
   const entry = scripts.find((script) => script.path === "entry.js")?.doc;
 
+  if (!entry) throw new Error("could not find entry script");
+
   try {
-    // TODO: resolve all imports in entry file (not children for now)
-    // TODO: ignore non-relative imports (regex)
-    const [imports] = parse(entry);
-    if (imports.length !== 1)
-      throw new Error("only 1 import from entry file is supported");
-    const { s: start, e: end } = imports[0];
-    const path = entry?.substring(start, end).slice(2);
-    const targetScript = scripts.find((script) => script.path === path);
-    if (!targetScript) throw new Error(`${path} could not be found`);
-    const targetScriptResolved = `data:text/javascript;base64,${btoa(
-      targetScript.doc
-    )}`;
-    const nextEntry =
-      entry?.substring(0, start) + targetScriptResolved + entry?.substring(end);
-    return toHTML(html, nextEntry, css);
+    return toHTML(html, resolveRelativeImports(entry, scripts), css);
   } catch (err) {
     console.error(err);
+    return toHTML(html, entry, css);
+  }
+};
+
+// TODO: detect and error on circular dependency
+const resolveRelativeImports = (entry: string, files: File[]): string => {
+  let [imports] = parse(entry);
+  if (!imports.length) return entry;
+
+  for (let i = 0; i < imports.length; i++) {
+    const { s, e } = imports[i];
+    const path = entry.substring(s, e);
+    const isRelativeImport = path.startsWith(".");
+    if (isRelativeImport) {
+      const pathWithExtension = path.endsWith(".js") ? path : path + ".js";
+      const relativeImportScript = files.find(
+        (file) => file.path === pathWithExtension.slice(2)
+      );
+      if (!relativeImportScript)
+        throw new Error(`could not find import ${path}`);
+      const relativeImportScriptURI = `data:text/javascript;base64,${btoa(
+        resolveRelativeImports(relativeImportScript.doc, files)
+      )}`;
+      entry =
+        entry.substring(0, s) + relativeImportScriptURI + entry.substring(e);
+      // import positions will have shifted so parse again
+      [imports] = parse(entry);
+    }
   }
 
-  return toHTML(html, entry, css);
+  return entry;
 };
 
 const renderIframe = (parent: HTMLElement, files: File[]) => {
