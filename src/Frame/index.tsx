@@ -7,6 +7,7 @@ import { init, parse } from "es-module-lexer";
 
 export default function Frame({ files }: { files: File[] }) {
   const ref: Ref<HTMLDivElement> = useRef();
+  const isInitialMount = useRef(true);
 
   // render immediately on mount
   useEffect(() => {
@@ -16,7 +17,11 @@ export default function Frame({ files }: { files: File[] }) {
 
   // debounce render when contents update
   useEffect(() => {
-    renderDebounced(ref.current, files);
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+    } else {
+      renderDebounced(ref.current, files);
+    }
   }, [files]);
 
   return <div ref={ref} class="h-full" />;
