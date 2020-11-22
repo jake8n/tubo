@@ -7,17 +7,42 @@ export interface File {
 const initialFiles: File[] = [
   {
     path: "index.html",
-    doc: "<!-- index.html -->\n",
+    doc: `<!-- index.html -->
+
+<p>Tubo is an in-browser code editor with E2E encrypted shared sessions 🙈</p>
+
+<p>Our unique rendering engine can import and export ES Modules. Check out the console log to see it in action!</p>
+`,
     lang: "html",
   },
   {
     path: "entry.js",
-    doc: "// entry.js\n",
+    doc: `// entry.js
+
+import { message } from "./helpers.js"
+
+console.log(message)
+`,
+    lang: "javascript",
+  },
+  {
+    path: "helpers.js",
+    doc: `// helpers.js
+
+export const message = "Hello from helpers.js!"
+`,
     lang: "javascript",
   },
   {
     path: "main.css",
-    doc: "/* main.css */\n",
+    doc: `/* main.css */
+
+body {
+  font-family: sans-serif;
+  font-size: 2rem;
+  padding: 1rem;
+}
+`,
     lang: "css",
   },
 ];

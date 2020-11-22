@@ -14,16 +14,19 @@ export function Tabs({
   const sortedPaths = [...paths].sort();
   // TODO: delete tab
   return (
-    <div class="flex">
+    <div class="flex overflow-auto">
       {sortedPaths.map((path) => (
         <button
-          class={"px-4 py-2" + (active === path ? " bg-white" : "")}
+          class={
+            "px-4 py-2 text-sm whitespace-nowrap" +
+            (active === path ? " bg-white" : "")
+          }
           onClick={() => onChange(path)}
         >
           {path}
         </button>
       ))}
-      <button onClick={() => onNew()}>
+      <button onClick={() => onNew()} class="px-2">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="24"
