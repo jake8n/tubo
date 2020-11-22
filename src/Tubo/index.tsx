@@ -1,13 +1,9 @@
 import React, { h } from "preact";
 import { nanoid } from "nanoid";
-import { javascript } from "@codemirror/next/lang-javascript";
-import { html } from "@codemirror/next/lang-html";
-import { css } from "@codemirror/next/lang-css";
 import { KeyManager } from "../KeyManager";
 import { Socket } from "../Socket";
 import Frame from "../Frame";
 import View from "../View";
-import { Extension as CodeMirrorExtension } from "@codemirror/next/state";
 import { useState, useEffect } from "preact/hooks";
 import { Persistence } from "../Persistence";
 import { TabContent, Tabs } from "../Tab";
@@ -15,39 +11,17 @@ import NavButton from "../NavButton";
 import { IconRadio } from "../Icons";
 
 const persistence = new Persistence();
-type Extension = "js" | "html" | "css";
-const views: {
-  extension: Extension;
-  extensions: CodeMirrorExtension[];
-}[] = [
-  {
-    extension: "js",
-    extensions: [javascript()],
-  },
-  {
-    extension: "html",
-    extensions: [html()],
-  },
-  {
-    extension: "css",
-    extensions: [css()],
-  },
-];
 
 export default function () {
   const [keyManager] = useState(new KeyManager());
   const [socket] = useState(
     new Socket((import.meta as any).env.SNOWPACK_PUBLIC_SOCKET_URI)
   );
-  const [files, setFiles] = useState({
-    js: persistence.js,
-    html: persistence.html,
-    css: persistence.css,
-  });
+  const [files, setFiles] = useState(persistence.files);
   const [isUsingSocket, setIsUsingSocket] = useState(false);
   const [isSocketReady, setIsSocketReady] = useState(false);
   const [roomKeyPair, setRoomKeyPair] = useState(getRoomKeyPairFromURL());
-  const [activeTab, setActiveTab] = useState("js");
+  const [activeTab, setActiveTab] = useState(persistence.activeTab);
 
   const initialiseSocket = async () => {
     setIsUsingSocket(true);
@@ -105,12 +79,23 @@ export default function () {
     return () => socket.off("request-for-state");
   }, [isSocketReady, files]);
 
-  const onOutgoingGenerator = (extension: Extension) => (doc: string) => {
-    persistence[extension] = doc;
-    setFiles({ ...files, [extension]: doc });
+  const onOutgoingGenerator = (path: string) => (doc: string) => {
+    const nextFiles = files.map((file) => {
+      if (file.path === path) {
+        return {
+          ...file,
+          doc,
+        };
+      } else {
+        return file;
+      }
+    });
+    persistence.files = nextFiles;
+    setFiles(nextFiles);
   };
 
   const onChangeTab = (id: string) => {
+    persistence.activeTab = id;
     setActiveTab(id);
     socket?.emit("set-active-tab", id);
   };
@@ -133,18 +118,16 @@ export default function () {
         <main class="flex flex-col lg:flex-row flex-1">
           <div class="bg-gray-200 flex flex-col flex-1 overflow-y-auto">
             <Tabs
-              names={["script.js", "index.html", "main.css"]}
-              ids={views.map((view) => view.extension)}
+              names={files.map((file) => file.path)}
+              ids={files.map((file) => file.path)}
               active={activeTab}
               onChange={onChangeTab}
             />
-            {views.map(({ extension, extensions }) => (
-              <TabContent active={extension === activeTab}>
+            {files.map((file) => (
+              <TabContent active={file.path === activeTab}>
                 <View
-                  extension={extension}
-                  extensions={extensions}
-                  initialLocalState={files[extension]}
-                  onOutgoing={onOutgoingGenerator(extension)}
+                  {...file}
+                  onOutgoing={onOutgoingGenerator(file.path)}
                   socket={socket}
                 />
               </TabContent>
@@ -152,7 +135,7 @@ export default function () {
           </div>
 
           <div class="flex-1">
-            <Frame {...files} />
+            <Frame files={files} />
           </div>
         </main>
       </div>
