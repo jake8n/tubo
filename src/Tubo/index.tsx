@@ -8,7 +8,7 @@ import { useState, useEffect } from "preact/hooks";
 import { Persistence } from "../Persistence";
 import { TabContent, Tabs } from "../Tab";
 import NavButton from "../NavButton";
-import { IconRadio } from "../Icons";
+import { IconArchive, IconRadio } from "../Icons";
 
 const persistence = new Persistence();
 
@@ -121,7 +121,20 @@ export default function Tubo() {
   if (isUsingSocket === isSocketReady) {
     return (
       <div class="h-screen flex">
-        <aside class="bg-blue-500 flex flex-col items-center p-2">
+        <aside class="bg-blue-600 flex flex-col items-center">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="currentColor"
+            viewBox="0 0 68 68"
+            class="text-pink-400 m-4"
+            width="48"
+            height="48"
+          >
+            <path
+              d="M466,201 C466,214.807119 454.807119,226 441,226 C438.852652,226 436.768537,225.729267 434.779927,225.220073 C434.270733,223.231463 434,221.147348 434,219 C434,205.192881 445.192881,194 459,194 C461.147348,194 463.231463,194.270733 465.220073,194.779927 C465.729267,196.768537 466,198.852652 466,201 Z M459,190 C442.983742,190 430,202.983742 430,219 C430,220.576939 430.125866,222.124481 430.368099,223.633126 C421.87747,219.637714 416,211.005235 416,201 C416,187.192881 427.192881,176 441,176 C451.005235,176 459.637714,181.87747 463.633126,190.368099 C462.124481,190.125866 460.576939,190 459,190 Z M484,219 C484,232.807119 472.807119,244 459,244 C448.994765,244 440.362286,238.12253 436.366874,229.631901 C437.875519,229.874134 439.423061,230 441,230 C457.016258,230 470,217.016258 470,201 C470,199.423061 469.874134,197.875519 469.631901,196.366874 C478.12253,200.362286 484,208.994765 484,219 Z"
+              transform="translate(-416 -176)"
+            />
+          </svg>
           {isUsingSocket ? (
             <NavButton text="Sharing" active>
               <IconRadio />
@@ -131,6 +144,9 @@ export default function Tubo() {
               <IconRadio />
             </NavButton>
           )}
+          {/* <NavButton text="Download">
+            <IconArchive />
+          </NavButton> */}
         </aside>
 
         <main class="flex flex-col lg:flex-row flex-1">
