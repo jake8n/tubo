@@ -60,9 +60,7 @@ export default function Tubo() {
 
       history.replaceState(null, "", `#${room},${key}`);
 
-      // if (window.confirm('Share this unique URL and enjoy e2e encyrpted coding. Clicking OK copies it to your clipboard.')) {
-      // TODO: copy to clipboard
-      // }
+      alert("Your URL has been updated! Share it to start collaborating.");
     });
   }, [roomKeyPair]);
 
