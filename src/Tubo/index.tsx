@@ -106,6 +106,8 @@ export default function Tubo() {
 
   const onNewTab = () => {
     const path = prompt("Please enter a file name", "helpers.js");
+    // TODO: if name already exists
+    // TODO: max length
     if (!path) return;
     if (!path.match(/[A-Za-z0-9-_]+\.js/g))
       return alert(
@@ -118,7 +120,7 @@ export default function Tubo() {
   const createNewFile = (path: string) => {
     const nextFiles = files.concat({
       path: path,
-      doc: `// ${path}`,
+      doc: `// ${path}\n`,
       lang: "javascript",
     });
     persistence.files = nextFiles;
@@ -158,7 +160,7 @@ export default function Tubo() {
           </NavButton> */}
         </aside>
 
-        <main class="flex flex-col lg:flex-row flex-1">
+        <main class="flex flex-col lg:flex-row flex-1 overflow-hidden">
           <div class="bg-gray-200 flex flex-col flex-1 overflow-y-auto">
             <Tabs
               paths={files.map((file) => file.path)}
