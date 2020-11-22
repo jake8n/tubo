@@ -82,7 +82,10 @@ export default class View extends Component<Props> {
 
   dispatch(transaction: Transaction) {
     this.editor?.update([transaction]);
-    this.props.onOutgoing(this.editor?.state.doc.toString());
+
+    if (!transaction.changes.empty) {
+      this.props.onOutgoing(this.editor?.state.doc.toString());
+    }
 
     if (
       !transaction.changes.empty &&
