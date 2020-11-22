@@ -39,7 +39,7 @@ const getContent = (files: File[]): string => {
   try {
     return toHTML(html, resolveRelativeImports(entry, scripts), css);
   } catch (err) {
-    console.error(err);
+    // suppress error to keep console clean
     return toHTML(html, entry, css);
   }
 };
