@@ -11,6 +11,8 @@ import { Extension as CodeMirrorExtension } from "@codemirror/next/state";
 import { useState, useEffect } from "preact/hooks";
 import { Persistence } from "../Persistence";
 import { TabContent, Tabs } from "../Tab";
+import NavButton from "../NavButton";
+import { IconRadio } from "../Icons";
 
 const persistence = new Persistence();
 type Extension = "js" | "html" | "css";
@@ -116,21 +118,19 @@ export default function () {
   if (isUsingSocket === isSocketReady) {
     return (
       <div class="h-screen flex">
-        <aside class="bg-blue-500 flex flex-col items-center p-4">
-          {!isUsingSocket && (
-            <button
-              onClick={onShare}
-              class="py-2 px-4 bg-pink-400 text-white font-semibold rounded-lg shadow-md"
-            >
-              Share
-            </button>
-          )}
-          {isUsingSocket && (
-            <p class="text-white font-semibold">Connected 👍</p>
+        <aside class="bg-blue-500 flex flex-col items-center p-2">
+          {isUsingSocket ? (
+            <NavButton text="Sharing" active>
+              <IconRadio />
+            </NavButton>
+          ) : (
+            <NavButton text="Share" onClick={onShare}>
+              <IconRadio />
+            </NavButton>
           )}
         </aside>
 
-        <main class="flex flex-1">
+        <main class="flex flex-col lg:flex-row flex-1">
           <div class="bg-gray-200 flex flex-col flex-1 overflow-y-auto">
             <Tabs
               names={["script.js", "index.html", "main.css"]}

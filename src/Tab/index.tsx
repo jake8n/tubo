@@ -25,6 +25,8 @@ export function Tabs({
   );
 }
 
+// TODO: children any
+
 export function TabContent({
   active,
   children,
