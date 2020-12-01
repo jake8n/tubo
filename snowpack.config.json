@@ -1,12 +1,16 @@
 {
   "buildOptions": {
-    "sourceMaps": true
+    "clean": true
   },
   "devOptions": {
     "open": "none",
     "output": "stream",
     "port": 3000,
     "secure": true
+  },
+  "mount": {
+    "public": "/",
+    "src": "/src"
   },
   "plugins": ["@snowpack/plugin-typescript"],
   "scripts": {
