@@ -9,7 +9,6 @@ import {
   Annotation,
   AnnotationType,
   ChangeSet,
-  Extension as CodeMirrorExtension,
   Transaction,
 } from "@codemirror/next/state";
 import { html } from "@codemirror/next/lang-html";
@@ -38,12 +37,11 @@ const langExtensionMap = {
 
 export default class View extends Component<Props> {
   editor?: EditorView;
-  ref: Ref<HTMLDivElement>;
+  ref?: Ref<HTMLDivElement>;
   syncAnnotation: AnnotationType<unknown>;
 
   constructor() {
     super();
-    this.ref = useRef();
     this.syncAnnotation = Annotation.define();
   }
 
@@ -75,7 +73,7 @@ export default class View extends Component<Props> {
     });
     this.editor = new EditorView({
       state,
-      parent: this.ref.current,
+      parent: this.ref?.current,
       dispatch: this.dispatch.bind(this),
     });
   }
@@ -103,6 +101,7 @@ export default class View extends Component<Props> {
   }
 
   render() {
-    return <div ref={this.ref} class="bg-white h-full overflow-x-auto" />;
+    this.ref = useRef();
+    return <div ref={this.ref} class="h-full bg-white overflow-x-auto" />;
   }
 }

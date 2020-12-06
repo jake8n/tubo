@@ -8,7 +8,7 @@ import { useState, useEffect } from "preact/hooks";
 import { Persistence } from "../Persistence";
 import { TabContent, Tabs } from "../Tab";
 import NavButton from "../NavButton";
-import { IconArchive, IconRadio } from "../Icons";
+import { IconRadio } from "../Icons";
 
 const persistence = new Persistence();
 
@@ -129,13 +129,13 @@ export default function Tubo() {
 
   if (isUsingSocket === isSocketReady) {
     return (
-      <div class="h-screen flex">
-        <aside class="bg-blue-600 flex flex-col items-center">
+      <div class="flex h-screen">
+        <aside class="flex flex-col items-center bg-blue-600">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="currentColor"
             viewBox="0 0 68 68"
-            class="text-pink-400 m-4"
+            class="m-4 text-pink-400"
             width="48"
             height="48"
           >
@@ -153,13 +153,10 @@ export default function Tubo() {
               <IconRadio />
             </NavButton>
           )}
-          {/* <NavButton text="Download">
-            <IconArchive />
-          </NavButton> */}
         </aside>
 
-        <main class="flex flex-col lg:flex-row flex-1 overflow-hidden">
-          <div class="bg-gray-200 flex flex-col flex-1 overflow-y-auto">
+        <main class="flex flex-1 flex-col overflow-hidden lg:flex-row">
+          <div class="flex flex-1 flex-col bg-gray-200 overflow-y-auto">
             <Tabs
               paths={files.map((file) => file.path)}
               active={activeTab}
