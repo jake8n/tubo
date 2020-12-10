@@ -19,7 +19,7 @@
     "lodash.debounce": "^4.0.8",
     "nanoid": "^3.1.20",
     "preact": "^10.5.7",
-    "socket.io-client": "^3.0.3"
+    "socket.io-client": "2.*"
   },
   "devDependencies": {
     "@snowpack/plugin-typescript": "^1.1.1",
