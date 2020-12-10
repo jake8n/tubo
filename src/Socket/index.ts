@@ -1,5 +1,4 @@
-// @ts-ignore
-import io from "socket.io-client/dist/socket.io.js";
+import io from "socket.io-client";
 import { decrypt, encrypt } from "../cryptography";
 
 export class Socket {
